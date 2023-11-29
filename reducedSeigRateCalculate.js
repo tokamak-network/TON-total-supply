@@ -11,7 +11,6 @@ const config = {
 const alchemy = new Alchemy(config);
 
 const reducedSeigRateCalculate = async () => {
-
   //Event collection
   const seigManagerContractAddress =
     "0x710936500aC59e8551331871Cbad3D33d5e0D909";
@@ -32,19 +31,37 @@ const reducedSeigRateCalculate = async () => {
     topics: SEIGMANGERL_CREATED_TOPICS,
   });
   //parse data field to identify unstakedSeig and powertonSeig
-  //if powertonSeig is less than 8% of the unstakedSeig record the amount and add them
+  //if powertonSeig is less than 8% of the unstakedSeig, record the amount and add them
+  console.log(logs[0]);
+
   let unmintedSeig = 0;
   let logsLength = logs.length;
   let unmintedSeigList = [];
   let reducedBlockNumberList = [];
   for (let i = 0; i < logsLength; i++) {
     let currentData = logs[i].data.split("");
+    let totalSeig = "";
+    let stakedSeig = "";
     let unstakedSeig = "";
     let powertonSeig = "";
 
-    //unstakedSeig
-    let dataPosition = 3;
+    //totalSeig
+    let dataPosition = 1;
     let start = (dataPosition - 1) * 64;
+    for (let j = start; j < 64 + start; j++) {
+      totalSeig = totalSeig + currentData[j + 2];
+    }
+
+    //stakedSeig
+    dataPosition = 2;
+    start = (dataPosition - 1) * 64;
+    for (let j = start; j < 64 + start; j++) {
+      stakedSeig = stakedSeig + currentData[j + 2];
+    }
+
+    //unstakedSeig
+    dataPosition = 3;
+    start = (dataPosition - 1) * 64;
     for (let j = start; j < 64 + start; j++) {
       unstakedSeig = unstakedSeig + currentData[j + 2];
     }
@@ -65,20 +82,24 @@ const reducedSeigRateCalculate = async () => {
     }
     if ((parseInt(unstakedSeig, 16) * 8) / 100 > parseInt(powertonSeig, 16)) {
       console.log("-----------");
-      console.log("unstakedseig is:",parseInt(unstakedSeig, 16) / 10 ** 27);
-      console.log("powertonseig is:",parseInt(powertonSeig, 16) / 10 ** 27);
-      console.log("pseig is:",parseInt(pseig, 16) / 10 ** 27);
+      console.log("totalseig is:", parseInt(totalSeig, 16) / 10 ** 27);
+      console.log("stakedSeig is:", parseInt(stakedSeig, 16) / 10 ** 27);
+      console.log("unstakedseig is:", parseInt(unstakedSeig, 16) / 10 ** 27);
+      console.log("powertonseig is:", parseInt(powertonSeig, 16) / 10 ** 27);
+      console.log("pseig is:", parseInt(pseig, 16) / 10 ** 27);
       unmintedSeig = unmintedSeig + parseInt(powertonSeig, 16);
-      unmintedSeigList.push(parseInt(powertonSeig, 16)/ 10 ** 27);
+      unmintedSeigList.push(parseInt(powertonSeig, 16) / 10 ** 27);
       reducedBlockNumberList.push(logs[i].blockNumber);
-      console.log(logs[i-1].blockNumber);
     }
   }
   unmintedSeig = unmintedSeig / 10 ** 27;
   console.log("-----------");
   console.log("Unminted TON is", unmintedSeig);
   console.log("Unminted TON list is", unmintedSeigList);
-  console.log("Block which produced less than it is supposed to ", reducedBlockNumberList);
+  console.log(
+    "Block which produced less than it is supposed to ",
+    reducedBlockNumberList
+  );
 };
 
 const runMain = async () => {
