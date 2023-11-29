@@ -22,7 +22,9 @@ const main = async () => {
     const burnAddressTON = "0x0000000000000000000000000000000000000001";  
 
     // Target Block number
-    const blockNum = 14109200; //2022. 2. 28 오전 5:00:00 OR Unix epoch time: 1643572800 
+    //const blockNum = 14109200; //2022. 2. 28 오전 5:00:00 OR Unix epoch time: 1643572800 
+    const blockNum = 18465217; //2022. 2. 28 오전 5:00:00 OR Unix epoch time: 1643572800 18662197
+
 
     // ABI
     let abi1 = [
@@ -77,7 +79,8 @@ const main = async () => {
     console.log("WTON TotalSupply:", totalSupplyWTON, "WTON");
     console.log("TON Held By WTON contract:", balanceTONHeldByWTON, "TON");
     console.log("TON Held By 0x...1:", balanceOfBurnedTON, "TON");
-    console.log("Total Supply for TON(WTON) is:",totalSupplyTONWTON, "TON"); // This can overflow -> NaN
+    console.log("Total Supply for TON(WTON) - 'missed seignorage' is:",totalSupplyTONWTON, "TON"); // This can overflow -> NaN
+    console.log("This does not account for unminted TON -> need to calculate it based on the last update seignorage")
 };
 
 const runMain = async () => {
