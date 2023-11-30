@@ -21,14 +21,25 @@ const reducedSeigRateCalculate = async () => {
     "SeigGiven",
     []
   );
+  const SEIGMANGERL_UNSTAKED = SEIGMANGER_INTERFACE.encodeFilterTopics(
+    "UnstakeLog",
+    []
+  );
   const blockBuffer = Math.ceil((40 * 24 * 60 * 60) / 13); //40 days of block
-  const startBlock = 12377817 - blockBuffer;
-  const endBlock = 13497999;
+  // 10837698 begin block for seignorage
+  const startBlock = 10837698;
+  const endBlock = 14489547;
   const logs = await alchemy.core.getLogs({
     fromBlock: "0x" + startBlock.toString(16),
     toBlock: "0x" + endBlock.toString(16),
     address: seigManagerContractAddress,
     topics: SEIGMANGERL_CREATED_TOPICS,
+  });
+  const unstakelogs = await alchemy.core.getLogs({
+    fromBlock: "0x" + startBlock.toString(16),
+    toBlock: "0x" + endBlock.toString(16),
+    address: seigManagerContractAddress,
+    topics: SEIGMANGERL_UNSTAKED,
   });
   //parse data field to identify unstakedSeig and powertonSeig
   //if powertonSeig is less than 8% of the unstakedSeig, record the amount and add them
@@ -99,6 +110,32 @@ const reducedSeigRateCalculate = async () => {
   console.log(
     "Block which produced less than it is supposed to ",
     reducedBlockNumberList
+  );
+
+  //add up all the burned tot
+  logsLength = unstakelogs.length-1;
+  console.log(unstakelogs[logsLength]);
+  totBurnedTotal = BigInt(0);
+  totBurnedList = [];
+  totBurnedBlockNumber=[];
+  for (let i = 0; i < logsLength; i++) {
+  dataPosition = 2;
+  start = (dataPosition - 1) * 64;
+  totBurned = ''
+  let currentData2 = unstakelogs[i].data.split("");
+  for (let j = start; j < 64 + start; j++) {
+    totBurned = totBurned + currentData2[j + 2];
+  }
+  totBurnedList.push(parseInt(totBurned, 16));
+  totBurnedBlockNumber.push(unstakelogs[i].blockNumber);
+  totBurnedTotal=totBurnedTotal+ BigInt('0x'+totBurned);
+  console.log("totBurned:", parseInt(totBurned, 16) / 10 ** 27);
+  }
+  console.log("totBurnedTotal:",Number(totBurnedTotal)/(10**27));
+  console.log("totBurned list is", totBurnedList);
+  console.log(
+    "Block which produced totBurned is ",
+    totBurnedBlockNumber
   );
 };
 
