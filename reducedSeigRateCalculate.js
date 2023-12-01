@@ -33,12 +33,7 @@ const reducedSeigRateCalculate = async () => {
     address: seigManagerContractAddress,
     topics: SEIGMANGERL_CREATED_TOPICS,
   });
-  const unstakelogs = await alchemy.core.getLogs({
-    fromBlock: "0x" + startBlock.toString(16),
-    toBlock: "0x" + endBlock.toString(16),
-    address: seigManagerContractAddress,
-    topics: SEIGMANGERL_UNSTAKED,
-  });
+
   //parse data field to identify unstakedSeig and powertonSeig
   //if powertonSeig is less than 8% of the unstakedSeig, record the amount and add them
   console.log(logs[0]);
