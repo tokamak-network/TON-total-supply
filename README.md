@@ -1,6 +1,7 @@
 # TON-total-supply file explanation
  1. main.js: Calculate TON total supply at specfic block based on the actual minted amount -> this is not an accurate figure for Total supply.
  2. reducedSeigRateCalculate.js: Calculated reduced seignorage due to seignorage rate change
+ 3. unstakedBurnTotCalculate.js: Calculated burn amount from unstake -> WTON amount that do not get minted
 
 # to run, copy paste it in the terminal
 git clone https://github.com/tokamak-network/TON-total-supply.git <br>
