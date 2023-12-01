@@ -21,14 +21,23 @@ const reducedSeigRateCalculate = async () => {
     "SeigGiven",
     []
   );
-  const blockBuffer = Math.ceil((40 * 24 * 60 * 60) / 13); //40 days of block
-  const startBlock = 12377817 - blockBuffer;
-  const endBlock = 13497999;
+
+  // const blockBuffer = Math.ceil((40 * 24 * 60 * 60) / 13); //40 days of block
+  // 10837698 begin block for seignorage 
+  const startBlock = 10837698;
+  const endBlock = 13497999; //SeigRate Change txn https://etherscan.io/tx/0x7a9eb4c3e80ee9e4e0e9c2a6d751a90da8a951d4644100335a4eb6dfbbc2fe33
+
   const logs = await alchemy.core.getLogs({
     fromBlock: "0x" + startBlock.toString(16),
     toBlock: "0x" + endBlock.toString(16),
     address: seigManagerContractAddress,
     topics: SEIGMANGERL_CREATED_TOPICS,
+  });
+  const unstakelogs = await alchemy.core.getLogs({
+    fromBlock: "0x" + startBlock.toString(16),
+    toBlock: "0x" + endBlock.toString(16),
+    address: seigManagerContractAddress,
+    topics: SEIGMANGERL_UNSTAKED,
   });
   //parse data field to identify unstakedSeig and powertonSeig
   //if powertonSeig is less than 8% of the unstakedSeig, record the amount and add them

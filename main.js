@@ -24,7 +24,7 @@ const main = async () => {
 
     // Target Block number
     //const blockNum = 14109200; //2022. 2. 28 오전 5:00:00 OR Unix epoch time: 1643572800 
-    const blockNum = 18465217; //2022. 2. 28 오전 5:00:00 OR Unix epoch time: 1643572800 18662197
+    const blockNum = 18681264; //2022. 2. 28 오전 5:00:00 OR Unix epoch time: 1643572800 18662197
 
 
     // ABI
