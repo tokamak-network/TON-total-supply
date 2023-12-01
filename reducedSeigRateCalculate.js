@@ -21,14 +21,12 @@ const reducedSeigRateCalculate = async () => {
     "SeigGiven",
     []
   );
-  const SEIGMANGERL_UNSTAKED = SEIGMANGER_INTERFACE.encodeFilterTopics(
-    "UnstakeLog",
-    []
-  );
-  const blockBuffer = Math.ceil((40 * 24 * 60 * 60) / 13); //40 days of block
-  // 10837698 begin block for seignorage
+
+  // const blockBuffer = Math.ceil((40 * 24 * 60 * 60) / 13); //40 days of block
+  // 10837698 begin block for seignorage 
   const startBlock = 10837698;
-  const endBlock = 14489547;
+  const endBlock = 13497999; //SeigRate Change txn https://etherscan.io/tx/0x7a9eb4c3e80ee9e4e0e9c2a6d751a90da8a951d4644100335a4eb6dfbbc2fe33
+
   const logs = await alchemy.core.getLogs({
     fromBlock: "0x" + startBlock.toString(16),
     toBlock: "0x" + endBlock.toString(16),
@@ -110,32 +108,6 @@ const reducedSeigRateCalculate = async () => {
   console.log(
     "Block which produced less than it is supposed to ",
     reducedBlockNumberList
-  );
-
-  //add up all the burned tot
-  logsLength = unstakelogs.length-1;
-  console.log(unstakelogs[logsLength]);
-  totBurnedTotal = BigInt(0);
-  totBurnedList = [];
-  totBurnedBlockNumber=[];
-  for (let i = 0; i < logsLength; i++) {
-  dataPosition = 2;
-  start = (dataPosition - 1) * 64;
-  totBurned = ''
-  let currentData2 = unstakelogs[i].data.split("");
-  for (let j = start; j < 64 + start; j++) {
-    totBurned = totBurned + currentData2[j + 2];
-  }
-  totBurnedList.push(parseInt(totBurned, 16));
-  totBurnedBlockNumber.push(unstakelogs[i].blockNumber);
-  totBurnedTotal=totBurnedTotal+ BigInt('0x'+totBurned);
-  console.log("totBurned:", parseInt(totBurned, 16) / 10 ** 27);
-  }
-  console.log("totBurnedTotal:",Number(totBurnedTotal)/(10**27));
-  console.log("totBurned list is", totBurnedList);
-  console.log(
-    "Block which produced totBurned is ",
-    totBurnedBlockNumber
   );
 };
 
