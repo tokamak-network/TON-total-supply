@@ -12,8 +12,10 @@ node reducedSeigRateCalculate.js <br>
 - 178111.66690985573 (W)TON has been not minted due to seignorage rate change 
 
 # Accurate way to calculate total supply
+if target block < 12358829 <br>
+- Total Supply = 50,000,000 + 3.92*(target block # - 10837698) - TON in 0x0..1 <br>
+
 if target block > 13484668 <br>
 - Total Supply = 50,000,000 + 3.92*(target block # - 10837698) - TON in 0x0..1 - 178111.66690985573 <br>
 
-if target block < 12358829 <br>
-- Total Supply = 50,000,000 + 3.92*(target block # - 10837698) - TON in 0x0..1 <br>
+

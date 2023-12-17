@@ -10,7 +10,7 @@ const config = {
 
 const alchemy = new Alchemy(config);
 
-const main = async (targetBlockNumber) => {
+const main = async () => {
     // Target address for balance (WTON contract address)
     const contractAddressWTON = "0xc4A11aaf6ea915Ed7Ac194161d2fC9384F15bff2";
     const numDecimalsWTON = 27;
@@ -24,7 +24,7 @@ const main = async (targetBlockNumber) => {
 
     // Target Block number
     //const blockNum = 14109200; //2022. 2. 28 오전 5:00:00 OR Unix epoch time: 1643572800 
-    const blockNum = targetBlockNumber; //2022. 2. 28 오전 5:00:00 OR Unix epoch time: 1643572800 18662197
+    const blockNum = 18681264; //2022. 2. 28 오전 5:00:00 OR Unix epoch time: 1643572800 18662197
 
 
     // ABI
@@ -86,8 +86,7 @@ const main = async (targetBlockNumber) => {
 
 const runMain = async () => {
     try {
-        let targetBlockNumber = 18681264;
-        await main(targetBlockNumber);
+        await main();
         process.exit(0);
     } catch (error) {
         console.log(error);

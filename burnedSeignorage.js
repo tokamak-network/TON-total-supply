@@ -2,6 +2,8 @@
 const { Alchemy, Network, Utils, BigNumber } = require("alchemy-sdk");
 const ethers = require("ethers");
 require("dotenv").config();
+const Moralis = require("moralis").default;
+const fs = require("fs");
 
 const config = {
   apiKey: process.env.ALCHEMY_API_KEY,
@@ -10,9 +12,7 @@ const config = {
 
 const alchemy = new Alchemy(config);
 
-const unstakedBurnTotCalculate = async () => {
-  //Event collection
-
+const burnedSeignorage = async (Block1, Block2) => {
   //ABI and contract setting
   const seigManagerContractAddress =
     "0x710936500aC59e8551331871Cbad3D33d5e0D909";
@@ -35,30 +35,52 @@ const unstakedBurnTotCalculate = async () => {
     PATCHED_SEIGMANGER_PROXY_INTERFACE.encodeFilterTopics("UnstakeLog", []);
 
   //block data retrieval
-  const startBlock = 10837698; // 10837698 begin block for seignorage 
-  const endBlock = 18243613; // patched after 18243613 block
+  var startBlock = Math.max(10837698, Block1 + 1); // 10837698 begin block for seignorage https://etherscan.io/tx/0x4750dd10e22f993cea3052dfc9872ad4d25efa68cb21938ad429dd59b912b8b5
+  if (Block1 == 10643305) {
+    startBlock = 10643305;
+  }
+  const endBlock = Block2;
 
-  const patchedStartBlock = 18029651; // patched before 18029651 block
-  const patchedEndBlock = await alchemy.core.getBlockNumber();
+  const patchedStartBlock = 18417894; //block 18417894 -> Patched block number based on patched contract deployment https://etherscan.io/tx/0xdde91cd2eef02b492015f5dbdcf36bc2e3bbe94627f90df85cf593df29de0561
 
-  const unstakelogs = await alchemy.core.getLogs({
-    fromBlock: "0x" + startBlock.toString(16),
-    toBlock: "0x" + endBlock.toString(16),
-    address: seigManagerContractAddress,
-    topics: SEIGMANGER_UNSTAKED,
-  });
-
-  const patchedUnstakeLogs = await alchemy.core.getLogs({
-    fromBlock: "0x" + patchedStartBlock.toString(16),
-    toBlock: "0x" + patchedEndBlock.toString(16),
-    address: patchedSeigManagerProxyAddress,
-    topics: PATCHED_SEIGMANGER_PROXY,
-  });
+  let unstakeLogs = [];
+  if (startBlock < patchedStartBlock) {
+    if (endBlock < patchedStartBlock) {
+      unstakeLogs = await alchemy.core.getLogs({
+        fromBlock: "0x" + startBlock.toString(16),
+        toBlock: "0x" + endBlock.toString(16),
+        address: seigManagerContractAddress,
+        topics: SEIGMANGER_UNSTAKED,
+      });
+    } else {
+      const patchedStartBlock_overlap = patchedStartBlock - 1;
+      unstakeLogs = await alchemy.core.getLogs({
+        fromBlock: "0x" + startBlock.toString(16),
+        toBlock: "0x" + patchedStartBlock_overlap.toString(16),
+        address: seigManagerContractAddress,
+        topics: SEIGMANGER_UNSTAKED,
+      });
+      const temp = await alchemy.core.getLogs({
+        fromBlock: "0x" + patchedStartBlock.toString(16),
+        toBlock: "0x" + endBlock.toString(16),
+        address: patchedSeigManagerProxyAddress,
+        topics: SEIGMANGER_UNSTAKED,
+      });
+      unstakeLogs.push(temp);
+    }
+  } else {
+    unstakeLogs = await alchemy.core.getLogs({
+      fromBlock: "0x" + startBlock.toString(16),
+      toBlock: "0x" + endBlock.toString(16),
+      address: patchedSeigManagerProxyAddress,
+      topics: SEIGMANGER_UNSTAKED,
+    });
+  }
 
   // Seigmanager (old version)
   //add up all the burned tot
-  logsLength = unstakelogs.length - 1;
-  console.log(unstakelogs[logsLength]);
+  logsLength = unstakeLogs.length - 1;
+  //console.log(unstakeLogs[logsLength]);
   totBurnedTotal = BigInt(0);
   totBurnedList = [];
   totBurnedBlockNumber = [];
@@ -67,20 +89,24 @@ const unstakedBurnTotCalculate = async () => {
     dataPosition = 2;
     start = (dataPosition - 1) * 64;
     totBurned = "";
-    let currentData2 = unstakelogs[i].data.split("");
+    let currentData2 = unstakeLogs[i].data.split("");
     for (let j = start; j < 64 + start; j++) {
       totBurned = totBurned + currentData2[j + 2];
     }
     totBurnedList.push(parseInt(totBurned, 16));
-    totBurnedBlockNumber.push(unstakelogs[i].blockNumber);
+    totBurnedBlockNumber.push(unstakeLogs[i].blockNumber);
     totBurnedTotal = totBurnedTotal + BigInt("0x" + totBurned);
-    console.log("totBurned:", parseInt(totBurned, 16) / 10 ** 27);
+    //console.log("totBurned:", parseInt(totBurned, 16) / 10 ** 27);
   }
+  /*
   console.log("-----------");
   console.log("totBurnedTotal:", Number(totBurnedTotal) / 10 ** 27);
   console.log("totBurned list is", totBurnedList);
   console.log("Block which produced totBurned is ", totBurnedBlockNumber);
+  */
+  return Number(totBurnedTotal) / 10 ** 27
 
+  /*
   // Patched Seigmanager Proxy (old version)
   //add up all the burned tot
   logsLength = patchedUnstakeLogs.length - 1;
@@ -110,7 +136,7 @@ const unstakedBurnTotCalculate = async () => {
   );
   console.log(
     "CombinedTotBurnedTotal:",
-    Number(patchedTotBurnedTotal+totBurnedTotal) / 10 ** 27
+    Number(patchedTotBurnedTotal + totBurnedTotal) / 10 ** 27
   );
   console.log("-----------");
   console.log("totBurned list is", totBurnedList);
@@ -121,11 +147,87 @@ const unstakedBurnTotCalculate = async () => {
     "Block which produced patchedTotBurned is ",
     patchedTotBurnedBlockNumber
   );
+  */
 };
 
 const runMain = async () => {
   try {
-    await unstakedBurnTotCalculate();
+    await Moralis.start({
+      apiKey: process.env.MORALIS_API_KEY,
+    });
+    let lastBlock = await alchemy.core.getBlock();
+    let lastUnix_timestamp = lastBlock.timestamp;
+
+    // Get relevant blocks based on the last block //list of unix epoch time based on https://docs.google.com/spreadsheets/d/1-4dT3nS4q7RwLgGI6rQ7M1hPx9XHI-Ryw1rkBCvTdcs/edit#gid=681869004 (use https://delim.co/# for comma)
+    let unixEpochTimeList = [
+      1597211409, 1599889809, 1602481809, 1605073809, 1607665809, 1610257809,
+      1612849809, 1615441809, 1618033809, 1620625809, 1623217809, 1625809809,
+      1628401809, 1630993809, 1633585809, 1636177809, 1638769809, 1641361809,
+      1643953809, 1646545809, 1649137809, 1651729809, 1654321809, 1656913809,
+      1659505809, 1662097809, 1664689809, 1667281809, 1669873809, 1672465809,
+      1675057809, 1677649809, 1680241809, 1682833809, 1685425809, 1688017809,
+      1690609809, 1693201809, 1695793809, 1698385809, 1700977809, 1703569809,
+      1703966400, 1706644800, 1709150400, 1711828800, 1714420800, 1717099200,
+      1719691200, 1722369600, 1725048000, 1727640000, 1730318400, 1732910400,
+      1735588800, 1738267200, 1740686400, 1743364800, 1745956800, 1748635200,
+      1751227200, 1753905600, 1756584000, 1759176000, 1761854400, 1764446400,
+      1767124800, 1769803200, 1772222400, 1774900800, 1777492800, 1780171200,
+      1782763200, 1785441600, 1788120000, 1790712000, 1793390400, 1795982400,
+    ];
+    let blockNumberList = [];
+    let completeList = [];
+    let burnedTONList = [];
+    for (let i = 0; i < unixEpochTimeList.length; i++) {
+      console.log("........................");
+      console.log(
+        "Moralis API data retrieval:",
+        i + 1,
+        "/",
+        unixEpochTimeList.length
+      );
+      if (unixEpochTimeList[i] <= lastUnix_timestamp) {
+        const formatedDate = new Date(unixEpochTimeList[i] * 1000);
+        const response = await Moralis.EvmApi.block.getDateToBlock({
+          chain: "0x1",
+          date: formatedDate,
+        });
+        blockNumberList.push(response.raw.block);
+      }
+    }
+    blockNumberList.unshift(blockNumberList[0]); //adds dummy data for the first entry
+
+    for (let i = 0; i < blockNumberList.length - 1; i++) {
+      console.log("........................");
+      console.log(
+        "Alchemy API data retrieval:",
+        i + 1,
+        "/",
+        blockNumberList.length
+      );
+      burnedTONList[i] = await burnedSeignorage(
+        blockNumberList[i],
+        blockNumberList[i + 1]
+      );
+    }
+    for (let i = 0; i < blockNumberList.length - 1; i++) {
+      completeList.push([blockNumberList[i + 1], burnedTONList[i]]);
+    }
+    console.log("blockNumber burnedSeig:", completeList);
+
+      // write the output
+      const fileName =
+      "data/block_" +
+      blockNumberList[blockNumberList.length - 1].toString() +
+      "_burnedTONSeig.csv";
+  
+      const output = completeList.join("\n");
+      fs.writeFileSync(fileName, output, function (err) {
+        if (err) {
+          return console.log(err);
+        }
+        console.log("The file was saved!");
+      });
+    
     process.exit(0);
   } catch (error) {
     console.log(error);
