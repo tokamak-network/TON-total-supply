@@ -1,6 +1,6 @@
 // used https://docs.alchemy.com/docs/sdk-developer-challenge-guide-4 as a reference
 const { Alchemy, Network, Utils, BigNumber } = require("alchemy-sdk");
-const ethers = require("ethers");
+const { ethers, JsonRpcProvider, utils } = require("ethers");
 require("dotenv").config();
 const Moralis = require("moralis").default;
 const fs = require("fs");
@@ -9,8 +9,8 @@ const config = {
   apiKey: process.env.ALCHEMY_API_KEY,
   network: Network.ETH_MAINNET,
 };
-
 const alchemy = new Alchemy(config);
+const provider = new JsonRpcProvider(process.env.RPC_ENDPOINT);
 
 const reducedSeignorage = async (Block1, Block2) => {
   //Event collection
@@ -25,12 +25,13 @@ const reducedSeignorage = async (Block1, Block2) => {
     []
   );
   var startBlock = Math.min(Math.max(10837698, Block1 + 1), 13497999); // 10837698 begin block for seignorage https://etherscan.io/tx/0x4750dd10e22f993cea3052dfc9872ad4d25efa68cb21938ad429dd59b912b8b5
-  if (Block1 == 10643305){
+  if (Block1 == 10643305) {
     startBlock = 10643305;
   }
 
   const endBlock = Math.min(Block2, 13497999); //block 13497999-> Powerton seig rate changed back to 10% https://etherscan.io/tx/0x7a9eb4c3e80ee9e4e0e9c2a6d751a90da8a951d4644100335a4eb6dfbbc2fe33
 
+  //alchemy
   const logs = await alchemy.core.getLogs({
     fromBlock: "0x" + startBlock.toString(16),
     toBlock: "0x" + endBlock.toString(16),
@@ -89,6 +90,56 @@ const reducedSeignorage = async (Block1, Block2) => {
   );
   */
 
+  /*
+  //ethers.js
+    const logs_ETHERS = await provider.getLogs({
+      address: seigManagerContractAddress,
+      topics: [SEIGMANGERL_CREATED_TOPICS],
+      fromBlock: startBlock, 
+      toBlock: endBlock
+  });
+
+  //ETHERS version: parse data field to identify unstakedSeig and powertonSeig
+  //if powertonSeig is less than 8% of the unstakedSeig (it should be 10%), record the amount and add them
+  let unmintedSeig_ETHERS = 0;
+  let logsLength_ETHERS = logs_ETHERS.length;
+  let unmintedSeigList_ETHERS = [];
+  let reducedBlockNumberList_ETHERS = [];
+  let allList_ETHERS = [];
+  for (let i = 0; i < logsLength_ETHERS; i++) {
+    let currentData = logs_ETHERS[i].data.split("");
+    let unstakedSeig = "";
+    let powertonSeig = "";
+
+    //unstakedSeig
+    dataPosition = 3;
+    start = (dataPosition - 1) * 64;
+    for (let j = start; j < 64 + start; j++) {
+      unstakedSeig = unstakedSeig + currentData[j + 2];
+    }
+
+    //powertonSeig
+    dataPosition = 4;
+    start = (dataPosition - 1) * 64;
+    for (let k = start; k < 64 + start; k++) {
+      powertonSeig = powertonSeig + currentData[k + 2];
+    }
+
+    if ((parseInt(unstakedSeig, 16) * 8) / 100 > parseInt(powertonSeig, 16)) {
+      unmintedSeig_ETHERS = unmintedSeig_ETHERS + parseInt(powertonSeig, 16);
+      unmintedSeigList_ETHERS.push(parseInt(powertonSeig, 16) / 10 ** 27);
+      reducedBlockNumberList_ETHERS.push(logs_ETHERS[i].blockNumber);
+      allList_ETHERS.push([
+        logs_ETHERS[i].blockNumber,
+        parseInt(powertonSeig, 16) / 10 ** 27,
+      ]);
+    }
+  }
+
+  unmintedSeig_ETHERS / 10 ** 27;
+  console.log("unmintedSeig / 10 ** 27:",unmintedSeig / 10 ** 27);
+  console.log("unmintedSeig_ETHERS / 10 ** 27:",unmintedSeig_ETHERS / 10 ** 27);
+*/  
   return unmintedSeig / 10 ** 27;
 };
 
@@ -101,7 +152,7 @@ const runMain = async () => {
     let lastUnix_timestamp = lastBlock.timestamp;
 
     // Get relevant blocks based on the last block //list of unix epoch time based on https://docs.google.com/spreadsheets/d/1-4dT3nS4q7RwLgGI6rQ7M1hPx9XHI-Ryw1rkBCvTdcs/edit#gid=681869004 (use https://delim.co/# for comma)
-    let unixEpochTimeList = [1597211409,1599889809,1602481809,1605073809,1607665809,1610257809,1612849809,1615441809,1618033809,1620625809,1623217809,1625809809,1628401809,1630993809,1633585809,1636177809,1638769809,1641361809,1643953809,1646545809,1649137809,1651729809,1654321809,1656913809,1659505809,1662097809,1664689809,1667281809,1669873809,1672465809,1675057809,1677649809,1680241809,1682833809,1685425809,1688017809,1690609809,1693201809,1695793809,1698385809,1700977809,1703569809,1703966400,1706644800,1709150400,1711828800,1714420800,1717099200,1719691200,1722369600,1725048000,1727640000,1730318400,1732910400,1735588800,1738267200,1740686400,1743364800,1745956800,1748635200,1751227200,1753905600,1756584000,1759176000,1761854400,1764446400,1767124800,1769803200,1772222400,1774900800,1777492800,1780171200,1782763200,1785441600,1788120000,1790712000,1793390400,1795982400];
+    let unixEpochTimeList = fs.readFileSync("./data/unixEpochTimeList.csv").toString('utf-8').split(',').map(Number);
     let blockNumberList = [];
     let completeList = [];
     let reducedTONList = [];
@@ -129,7 +180,7 @@ const runMain = async () => {
         "Alchemy API data retrieval:",
         i + 1,
         "/",
-        blockNumberList.length
+        blockNumberList.length - 1
       );
       reducedTONList[i] = await reducedSeignorage(
         blockNumberList[i],
@@ -137,24 +188,27 @@ const runMain = async () => {
       );
     }
     for (let i = 0; i < blockNumberList.length - 1; i++) {
-      completeList.push([blockNumberList[i+1], reducedTONList[i]]);
+      completeList.push([blockNumberList[i + 1], reducedTONList[i]]);
     }
     console.log("blockNumber reducedSeig:", completeList);
 
     // write the output
     const fileName =
-    "data/block_" +
-    blockNumberList[blockNumberList.length - 1].toString() +
-    "_reducedTONSeig.csv";
+      "data/block_" +
+      blockNumberList[blockNumberList.length - 1].toString() +
+      "_reducedTONSeig.csv";
 
-    const output = completeList.join("\n");
-    fs.writeFileSync(fileName, output, function (err) {
-      if (err) {
-        return console.log(err);
-      }
-      console.log("The file was saved!");
-    });
-
+      const header = "Block number, Reduced seignorage"; // Add the header
+      const data = completeList.map(([blockNumber, reducedTON]) => `${blockNumber}, ${reducedTON}`).join("\n"); // Format the data
+  
+      const output = `${header}\n${data}`; // Combine the header and data
+      fs.writeFileSync(fileName, output, function (err) {
+        if (err) {
+          return console.log(err);
+        }
+        console.log("The file was saved!");
+      });
+  
     process.exit(0);
   } catch (error) {
     console.log(error);

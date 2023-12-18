@@ -2,6 +2,7 @@
 const { Alchemy, Network, Utils, BigNumber } = require("alchemy-sdk");
 const ethers = require('ethers');
 require("dotenv").config();
+const burnedSeignorage = require('./burnedSeignorage.js');
 
 const config = {
     apiKey: process.env.ALCHEMY_API_KEY,
@@ -86,6 +87,7 @@ const main = async (targetBlockNumber) => {
 
 const runMain = async () => {
     try {
+        burnedSeignorage.runMain();
         let targetBlockNumber = 18681264;
         await main(targetBlockNumber);
         process.exit(0);
