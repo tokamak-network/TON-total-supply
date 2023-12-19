@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "alchemy-sdk": "^3.0.0",
+    "alchemy-sdk": "^3.1.0",
     "dotenv": "^16.3.1",
     "ethers": "^6.8.1",
     "moralis": "^2.23.2"

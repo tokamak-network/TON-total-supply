@@ -10,7 +10,6 @@ const config = {
   network: Network.ETH_MAINNET,
 };
 const alchemy = new Alchemy(config);
-const provider = new JsonRpcProvider(process.env.RPC_ENDPOINT);
 
 const reducedSeignorage = async (Block1, Block2) => {
   //Event collection
@@ -77,77 +76,17 @@ const reducedSeignorage = async (Block1, Block2) => {
         parseInt(powertonSeig, 16) / 10 ** 27,
       ]);
     }
-  }
-
-  /* check
-  unmintedSeig = unmintedSeig / 10 ** 27;
-  console.log("-----------");
-  console.log("Unminted TON is", unmintedSeig);
-  console.log("Unminted TON list is", unmintedSeigList);
-  console.log(
-    "Block which produced less than it is supposed to ",
-    reducedBlockNumberList
-  );
-  */
-
-  /*
-  //ethers.js
-    const logs_ETHERS = await provider.getLogs({
-      address: seigManagerContractAddress,
-      topics: [SEIGMANGERL_CREATED_TOPICS],
-      fromBlock: startBlock, 
-      toBlock: endBlock
-  });
-
-  //ETHERS version: parse data field to identify unstakedSeig and powertonSeig
-  //if powertonSeig is less than 8% of the unstakedSeig (it should be 10%), record the amount and add them
-  let unmintedSeig_ETHERS = 0;
-  let logsLength_ETHERS = logs_ETHERS.length;
-  let unmintedSeigList_ETHERS = [];
-  let reducedBlockNumberList_ETHERS = [];
-  let allList_ETHERS = [];
-  for (let i = 0; i < logsLength_ETHERS; i++) {
-    let currentData = logs_ETHERS[i].data.split("");
-    let unstakedSeig = "";
-    let powertonSeig = "";
-
-    //unstakedSeig
-    dataPosition = 3;
-    start = (dataPosition - 1) * 64;
-    for (let j = start; j < 64 + start; j++) {
-      unstakedSeig = unstakedSeig + currentData[j + 2];
-    }
-
-    //powertonSeig
-    dataPosition = 4;
-    start = (dataPosition - 1) * 64;
-    for (let k = start; k < 64 + start; k++) {
-      powertonSeig = powertonSeig + currentData[k + 2];
-    }
-
-    if ((parseInt(unstakedSeig, 16) * 8) / 100 > parseInt(powertonSeig, 16)) {
-      unmintedSeig_ETHERS = unmintedSeig_ETHERS + parseInt(powertonSeig, 16);
-      unmintedSeigList_ETHERS.push(parseInt(powertonSeig, 16) / 10 ** 27);
-      reducedBlockNumberList_ETHERS.push(logs_ETHERS[i].blockNumber);
-      allList_ETHERS.push([
-        logs_ETHERS[i].blockNumber,
-        parseInt(powertonSeig, 16) / 10 ** 27,
-      ]);
-    }
-  }
-
-  unmintedSeig_ETHERS / 10 ** 27;
-  console.log("unmintedSeig / 10 ** 27:",unmintedSeig / 10 ** 27);
-  console.log("unmintedSeig_ETHERS / 10 ** 27:",unmintedSeig_ETHERS / 10 ** 27);
-*/  
+  }  
   return unmintedSeig / 10 ** 27;
 };
 
-const runMain = async () => {
+const updateCSV = async () => {
   try {
+    if (!Moralis.Core.isStarted) {
     await Moralis.start({
       apiKey: process.env.MORALIS_API_KEY,
     });
+  }
     let lastBlock = await alchemy.core.getBlock();
     let lastUnix_timestamp = lastBlock.timestamp;
 
@@ -173,6 +112,7 @@ const runMain = async () => {
         blockNumberList.push(response.raw.block);
       }
     }
+
     blockNumberList.unshift(blockNumberList[0]); //adds dummy data for the first entry
     for (let i = 0; i < blockNumberList.length - 1; i++) {
       console.log("........................");
@@ -196,7 +136,7 @@ const runMain = async () => {
     const fileName =
       "data/block_" +
       blockNumberList[blockNumberList.length - 1].toString() +
-      "_reducedTONSeig.csv";
+      "_reducedSeigTON.csv";
 
       const header = "Block number, Reduced seignorage"; // Add the header
       const data = completeList.map(([blockNumber, reducedTON]) => `${blockNumber}, ${reducedTON}`).join("\n"); // Format the data
@@ -215,5 +155,7 @@ const runMain = async () => {
     process.exit(1);
   }
 };
-
-runMain();
+updateCSV();
+module.exports = {
+  reducedSeignorage,
+};

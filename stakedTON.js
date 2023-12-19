@@ -78,16 +78,18 @@ const stakedTON = async (targetBlockNumber) => {
   return formatedStaked;
 };
 
-const runMain = async () => {
+const updateCSV = async () => {
   try {
     let lastBlock = await alchemy.core.getBlock();
     let lastBlockNumber = lastBlock.number;
     let lastUnix_timestamp = lastBlock.timestamp;
     var lastDate = new Date(lastUnix_timestamp * 1000);
 
+    if (!Moralis.Core.isStarted) {
     await Moralis.start({
       apiKey: process.env.MORALIS_API_KEY,
     });
+  }
 
     // Get relevant blocks based on the last block //list of unix epoch time based on https://docs.google.com/spreadsheets/d/1-4dT3nS4q7RwLgGI6rQ7M1hPx9XHI-Ryw1rkBCvTdcs/edit#gid=681869004 (use https://delim.co/# for comma)
     let unixEpochTimeList = fs.readFileSync("./data/unixEpochTimeList.csv").toString('utf-8').split(',').map(Number);
@@ -148,5 +150,7 @@ const runMain = async () => {
     process.exit(1);
   }
 };
-
-runMain();
+updateCSV();
+module.exports = {
+  stakedTON,
+};
