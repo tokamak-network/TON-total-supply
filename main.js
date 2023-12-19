@@ -3,165 +3,87 @@ const { Alchemy, Network, Utils, BigNumber } = require("alchemy-sdk");
 require("dotenv").config();
 const Moralis = require("moralis").default;
 const fs = require("fs");
-const reducedSeignorage = require('./reducedSeignorage');
-const stakedTON = require('./stakedTON');
-const burnedSeignorage = require('./burnedSeignorage');
+const reducedSeignorage = require("./reducedSeignorage");
+const stakedTON = require("./stakedTON");
+const burnedSeignorage = require("./burnedSeignorage");
+const burnedTON = require("./burnedTON");
+const lockedTON = require("./lockedTON");
+const update = require("./updateCSV");
 
 const config = {
-    apiKey: process.env.ALCHEMY_API_KEY,
-    network: Network.ETH_MAINNET,
-  };
+  apiKey: process.env.ALCHEMY_API_KEY,
+  network: Network.ETH_MAINNET,
+};
 const alchemy = new Alchemy(config);
 
-// updates all csv
-const updateCSV = async () => {
-    try {
-      if (!Moralis.Core.isStarted) {
-        await Moralis.start({
-          apiKey: process.env.MORALIS_API_KEY,
-        });
-      }
-      let lastBlock = await alchemy.core.getBlock();
-      let lastUnix_timestamp = lastBlock.timestamp;
-      let lastBlockNumber = lastBlock.number;
-      var lastDate = new Date(lastUnix_timestamp * 1000);
+const runMain = async () => {
+  let startBlock = 10643261; // TON contract deployment https://etherscan.io/tx/0x2d66feb7bdaba9f5b2c22e8ec4bfa7b012b2ff655bd93017df203d49747565b2
+  let lastBlock = await alchemy.core.getBlock();
+  let lastUnix_timestamp = lastBlock.timestamp;
+  let lastBlockNumber = lastBlock.number;
+  var lastDate = new Date(lastUnix_timestamp * 1000);
 
-      // Get relevant blocks based on the last block //list of unix epoch time based on https://docs.google.com/spreadsheets/d/1-4dT3nS4q7RwLgGI6rQ7M1hPx9XHI-Ryw1rkBCvTdcs/edit#gid=681869004 (use https://delim.co/# for comma)
-      let unixEpochTimeList = fs
-        .readFileSync("./data/unixEpochTimeList.csv")
-        .toString("utf-8")
-        .split(",")
-        .map(Number);
+  // Max totalSupply: 50_000_000 TON + 3.92 WTON Seignorage per block
+  let totalSupply = 50_000_000 + 3.92 * (lastBlockNumber - 10837698); // 10837698 begin block for seignorage https://etherscan.io/tx/0x4750dd10e22f993cea3052dfc9872ad4d25efa68cb21938ad429dd59b912b8b5
 
-      for (let i = 0; i < unixEpochTimeList.length; i++) {
-        console.log("........................");
-        console.log(
-          "Moralis API data retrieval:",
-          i + 1,
-          "/",
-          unixEpochTimeList.length
-        );
-        if (unixEpochTimeList[i] <= lastUnix_timestamp) {
-          const formatedDate = new Date(unixEpochTimeList[i] * 1000);
-          const response = await Moralis.EvmApi.block.getDateToBlock({
-            chain: "0x1",
-            date: formatedDate,
-          });
-          blockNumberList.push(response.raw.block);
-        }
-      }
+  // Burned TON
+  let burnedTONAmount = await burnedTON.burnedTON(startBlock, lastBlockNumber);
 
-      blockNumberListEvents = blockNumberList;
-      blockNumberListEvents.unshift(blockNumberListEvents[0]); //adds dummy data for the first entry
+  // Burned TON Seignorage
+  let burnedSeignorageAmount = await burnedSeignorage.burnedSeignorage(
+    startBlock,
+    lastBlockNumber
+  );
 
-      ///
-      /// update stakedTON 
-      ///
-      let stakedTONList = [];
-      let completeList = [];
-      for (let i = 0; i < unixEpochTimeList.length; i++) {
-        console.log("........................");
-        console.log("Moralis API data retrieval:",i+1,"/",unixEpochTimeList.length)
-        if (unixEpochTimeList[i] <= lastUnix_timestamp) {
-          const formatedDate = new Date(unixEpochTimeList[i] * 1000);
-          const response = await Moralis.EvmApi.block.getDateToBlock({
-            chain: "0x1",
-            date: formatedDate,
-          });
-          blockNumberList[i] = response.raw.block;
-        }
-      }
+  // Reduced TON Seignorage
+  let reducedSeignorageAmount = await reducedSeignorage.reducedSeignorage(
+    startBlock,
+    lastBlockNumber
+  );
+
+  // Locked TON
+  [lockedTONAmount, spentTONAmount] = await lockedTON.lockedTON(
+    startBlock,
+    lastBlockNumber
+  );
+  lockedTONAmount = lockedTONAmount - spentTONAmount;
+
+  // Staked TON
+  stakedTONAmount = await stakedTON.stakedTON(lastBlockNumber);
+
+  console.log("............................................");
+  console.log("Current block number:", lastBlockNumber);
+  console.log("Current block time:", lastDate);
+  console.log("............................................");
+  console.log("............................................");
+  console.log("Burned TON is :", burnedTONAmount);
+  console.log("Burned TON Seignorage is :", burnedSeignorageAmount);
+  console.log("Reduced TON Seignorage is :", reducedSeignorageAmount);
+  console.log("Locked TON is :", lockedTONAmount);
+  console.log("Staked TON is :", stakedTONAmount);
+  console.log("............................................");
+  console.log("............................................");
+
+
+  // Calculate total supply
+  totalSupply =
+    totalSupply -
+    burnedTONAmount -
+    burnedSeignorageAmount -
+    reducedSeignorageAmount;
+  console.log("Total Supply for TON is :", totalSupply, "TON");
+
+  // Circulating Supply
+  let circulatingSupply = totalSupply - stakedTONAmount - lockedTONAmount;
+  console.log("Circulating Supply:", circulatingSupply,"TON (",Math.round(circulatingSupply/totalSupply*100),"% of total supply)");
+
+  // Circulating Supply (Upbit), includes staked TON as circulating supply
+  let circulatingSupplyUpbit = totalSupply - lockedTONAmount;
+  console.log("Circulating Supply (Upbit):", circulatingSupplyUpbit,"TON (",Math.round(circulatingSupplyUpbit/totalSupply*100),"% of total supply)");
+  console.log("............................................");
   
-      for (let i = 0; i < blockNumberList.length; i++) {
-        console.log("........................");
-        console.log("Alchemy API data retrieval:",i+1,"/",blockNumberList.length)
-        stakedTONList[i] = await stakedTON(blockNumberList[i]);
-        completeList.push([blockNumberList[i],stakedTONList[i]]);
-      }
-  
-      //write the output
-      const fileName = "data/block_"+blockNumberList[blockNumberList.length-1].toString()+'_stakedTON.csv';
-      const header = "Block number, Staked (W)TON"; // Add the header
-      const data = completeList.map(([blockNumber, stakedTON]) => `${blockNumber}, ${stakedTON}`).join("\n"); // Format the data
-  
-      const output = `${header}\n${data}`; // Combine the header and data
-      fs.writeFileSync(fileName, output, function (err) {
-        if (err) {
-          return console.log(err);
-        }
-        console.log("The file was saved!");
-      });
-  
-      //Current block
-      currentStakedTON = await stakedTON(lastBlockNumber);
-      console.log("........................");
-      console.log("......Current Staked TON......");
-      console.log("Current block number:", lastBlockNumber);
-      console.log("Current block time:", lastDate);
-      console.log("(W)TON Staked:", currentStakedTON, "(W)TON");
-  
-      //Result summary
-      console.log("........................");
-      console.log("......Raw Data......");
-      console.log("[blockNumber stakedTON]:", completeList);
+  //Update burnedTON, lockedTON, burnedSiegTON, reducedSeigTON, stakedTON
+  update.updateCSV()
+};
 
-
-
-
-
-      let blockNumberList = [];
-      let completeList = [];
-      let burnedTONList = [];
-
-      blockNumberList.unshift(blockNumberList[0]); //adds dummy data for the first entry
-      for (let i = 0; i < blockNumberList.length - 1; i++) {
-        console.log("........................");
-        console.log(
-          "Alchemy API data retrieval:",
-          i + 1,
-          "/",
-          blockNumberList.length - 1
-        );
-        burnedTONList[i] = await burnedSeignorage(
-          blockNumberList[i],
-          blockNumberList[i + 1]
-        );
-      }
-      for (let i = 0; i < blockNumberList.length - 1; i++) {
-        completeList.push([blockNumberList[i + 1], burnedTONList[i]]);
-      }
-      console.log("blockNumber burnedSeig:", completeList);
-  
-      // write the output
-      const fileName =
-        "data/block_" +
-        blockNumberList[blockNumberList.length - 1].toString() +
-        "_burnedTONSeig.csv";
-  
-      const header = "Block number, Burned seignorage"; // Add the header
-      const data = completeList
-        .map(([blockNumber, burnedTON]) => `${blockNumber}, ${burnedTON}`)
-        .join("\n"); // Format the data
-  
-      const output = `${header}\n${data}`; // Combine the header and data
-      fs.writeFileSync(fileName, output, function (err) {
-        if (err) {
-          return console.log(err);
-        }
-        console.log("The file was saved!");
-      });
-  
-      process.exit(0);
-    } catch (error) {
-      console.log(error);
-      process.exit(1);
-    }
-  };
-
-
-updateCSV();
-
-
-reducedSeignorage.updateCSV();
-stakedTON.updateCSV();
-burnedSeignorage.updateCSV();
+runMain();

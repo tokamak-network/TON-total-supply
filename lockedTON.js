@@ -82,9 +82,7 @@ const updateCSV = async () => {
     // Get relevant blocks based on the last block //list of unix epoch time based on https://docs.google.com/spreadsheets/d/1-4dT3nS4q7RwLgGI6rQ7M1hPx9XHI-Ryw1rkBCvTdcs/edit#gid=681869004 (use https://delim.co/# for comma)
     let unixEpochTimeList = fs.readFileSync("./data/unixEpochTimeList.csv").toString('utf-8').split(',').map(Number);
     let blockNumberList = [];
-    let completeList = [];
-    let lockedTONList = [];
-    let spentTONList = [];
+  
     for (let i = 0; i < unixEpochTimeList.length; i++) {
       console.log("........................");
       console.log(
@@ -104,6 +102,10 @@ const updateCSV = async () => {
     }
 
     blockNumberList.unshift(blockNumberList[0]); //adds dummy data for the first entry
+    
+    let completeList = [];
+    let lockedTONList = [];
+    let spentTONList = [];
     for (let i = 0; i < blockNumberList.length - 1; i++) {
       console.log("........................");
       console.log(
@@ -145,7 +147,7 @@ const updateCSV = async () => {
     process.exit(1);
   }
 };
-updateCSV();
+
 module.exports = {
   lockedTON,
 };

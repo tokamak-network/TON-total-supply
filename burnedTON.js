@@ -123,7 +123,7 @@ const updateCSV = async () => {
     process.exit(1);
   }
 };
-updateCSV();
+
 module.exports = {
     burnedTON,
 };

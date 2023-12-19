@@ -72,7 +72,6 @@ const burnedSeignorage = async (Block1, Block2) => {
   // Seigmanager (old version)
   //add up all the burned tot
   logsLength = unstakeLogs.length;
-  console.log("logsLength:", logsLength);
   totBurnedTotal = 0;
   totBurnedList = [];
   totBurnedBlockNumber = [];
@@ -190,8 +189,6 @@ const updateCSV = async () => {
       .split(",")
       .map(Number);
     let blockNumberList = [];
-    let completeList = [];
-    let burnedTONList = [];
     for (let i = 0; i < unixEpochTimeList.length; i++) {
       console.log("........................");
       console.log(
@@ -210,6 +207,9 @@ const updateCSV = async () => {
       }
     }
     blockNumberList.unshift(blockNumberList[0]); //adds dummy data for the first entry
+    
+    let completeList = [];
+    let burnedTONList = [];
     for (let i = 0; i < blockNumberList.length - 1; i++) {
       console.log("........................");
       console.log(
@@ -253,7 +253,7 @@ const updateCSV = async () => {
     process.exit(1);
   }
 };
-updateCSV();
+
 module.exports = {
   burnedSeignorage,
 };

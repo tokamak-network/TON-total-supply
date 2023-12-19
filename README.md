@@ -1,21 +1,33 @@
-# TON-total-supply file explanation
- 1. main.js: Calculate TON total supply at specfic block based on the actual minted amount -> this is not an accurate figure for Total supply.
- 2. reducedSeigRateCalculate.js: Calculated reduced seignorage due to seignorage rate change
- 3. unstakedBurnTotCalculate.js: Calculated burn amount from unstake -> WTON amount that do not get minted
+# TON Total Supply
 
-# to run, copy paste it in the terminal
-git clone https://github.com/tokamak-network/TON-total-supply.git <br>
-node main.js <br>
-node reducedSeigRateCalculate.js <br>
+This repository contains seven JavaScript files related to the TON (Tokamak Network) total supply calculations.
 
-# Result for reduced seignorage: 
-- 178111.66690985573 (W)TON has been not minted due to seignorage rate change 
+## Files
 
-# Accurate way to calculate total supply
-if target block < 12358829 <br>
-- Total Supply = 50,000,000 + 3.92*(target block # - 10837698) - TON in 0x0..1 <br>
+- `main.js`: Main file for TON total supply calculations.
+- `updateCSV.js`: File for updating CSV data related to TON total supply.
+- `burnedTON.js`: File for calculating the burned TON tokens at 0x0000...0001.
+- `burnedSeignorage.js`: File for calculating the burned seignorage of TON.
+- `reducedSeignorage.js`: File for calculating the reduced seignorage of TON.
+- `lockedTON.js`: File for calculating the locked TON tokens.
+- `stakedTON.js`: File for calculating the staked TON tokens.
 
-if target block > 13484668 <br>
-- Total Supply = 50,000,000 + 3.92*(target block # - 10837698) - TON in 0x0..1 - 178111.66690985573 <br>
+## Data Folder
 
+The `data` folder contains outputs from the `main.js` file. These files are used to update the TON supply spreadsheet, which can be found at [https://docs.google.com/spreadsheets/d/1-4dT3nS4q7RwLgGI6rQ7M1hPx9XHI-Ryw1rkBCvTdcs/edit?usp=sharing](https://docs.google.com/spreadsheets/d/1-4dT3nS4q7RwLgGI6rQ7M1hPx9XHI-Ryw1rkBCvTdcs/edit?usp=sharing).
 
+## Usage
+
+To use this project, follow these steps:
+
+1. Create a `.env` file. See .env_example file to see what to add.
+2. Install the required dependencies.
+3. Run the command: `node main.js`.
+
+## Contributing
+
+If you find any issues or have suggestions for improvements, feel free to open an issue or submit a pull request. Contributions are always welcome!
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
