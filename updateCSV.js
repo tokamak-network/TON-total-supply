@@ -1,3 +1,14 @@
+/**
+ * This script updates and generates CSV files for different metrics related to TON (Telegram Open Network) supply.
+ * It retrieves data using the Alchemy API and writes the output to CSV files.
+ * The metrics include burned TON, locked TON, burned seignorage, and reduced seignorage.
+ * The script iterates over a list of block numbers and calculates the corresponding metrics for each block.
+ * The output CSV files are named based on the block number and the specific metric.
+ * The script uses the `fs` module to write the CSV files.
+ * If an error occurs during the execution of the script, it will be logged to the console and the process will exit with a non-zero status code.
+ */
+
+// Rest of the code...
 // used https://docs.alchemy.com/docs/sdk-developer-challenge-guide-4 as a reference
 const { Alchemy, Network, Utils, BigNumber } = require("alchemy-sdk");
 require("dotenv").config();
@@ -54,9 +65,6 @@ const updateCSV = async () => {
       }
     }
 
-
-
-    console.log("blockNumberList:",blockNumberList);
     ///
     /// 1. Begin update stakedTON
     ///

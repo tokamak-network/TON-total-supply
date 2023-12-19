@@ -1,4 +1,13 @@
-// reference material: https://docs.alchemy.com/docs/how-to-get-erc-20-token-balance-at-a-given-block
+/**
+ * This JavaScript file contains code for retrieving and updating the staked TON (WTON) data.
+ * It utilizes the Alchemy SDK, ethers.js, dotenv, Moralis, and fs modules.
+ * The code retrieves the staked TON balance at a given block number using the Alchemy API.
+ * It also updates a CSV file with the staked TON data for a list of specified block numbers.
+ * The staked TON data includes the block number and the amount of staked TON (WTON) at that block.
+ * The file exports the stakedTON function for external use.
+ *
+ * reference https://docs.alchemy.com/docs/how-to-get-erc-20-token-balance-at-a-given-block
+ */
 const { Alchemy, Network, Utils, BigNumber } = require("alchemy-sdk");
 const ethers = require("ethers");
 require("dotenv").config();
@@ -53,27 +62,6 @@ const stakedTON = async (targetBlockNumber) => {
       targetBlockNumber
     );
   }
-
-  /*  // result in console
-   block time
-  let block = await alchemy.core.getBlock(targetBlockNumber);
-  let unix_timestamp = block.timestamp;
-  var date = new Date(unix_timestamp * 1000);
-  
-  console.log(
-    "At block time (block number):",
-    date,
-    "(",
-    targetBlockNumber,
-    ")"
-  );
-  console.log(
-    "(W)TON Staked:",
-    parseInt(stakedTON) / 10 ** numDecimals,
-    "(W)TON"
-  );
-  console.log("........................");
-  */
   formatedStaked = stakedTON / 10 ** numDecimals;
   return formatedStaked;
 };

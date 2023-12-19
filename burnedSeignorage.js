@@ -1,6 +1,26 @@
+/**
+ * This file contains a JavaScript module that calculates the burned seignorage
+ * for a given range of blocks. It exports a function called `burnedSeignorage`
+ * that takes in the start and end block numbers and returns the total burned seignorage.
+ * The module also exports an `updateCSV` function that retrieves relevant block numbers
+ * based on the last block, calculates the burned seignorage for each block range,
+ * and writes the output to a CSV file.
+ *
+ * The `burnedSeignorage` function uses the Alchemy API to retrieve logs for the
+ * specified block range and calculates the burned seignorage by parsing the data
+ * from the logs. It adds up all the burned TON (TON is a cryptocurrency) and returns
+ * the total burned seignorage.
+ *
+ * The `updateCSV` function uses the Moralis API to retrieve the last block's timestamp,
+ * reads a list of Unix epoch times from a CSV file, converts the Unix epoch times to block numbers,
+ * and then calculates the burned seignorage for each block range. It writes the block numbers
+ * and corresponding burned seignorage to a CSV file.
+ *
+ * This module can be used to track and analyze the burned seignorage over time in the TON blockchain.
+ */
+
 // used https://docs.alchemy.com/docs/sdk-developer-challenge-guide-4 as a reference
-const { Alchemy, Network, Utils, BigNumber } = require("alchemy-sdk");
-const ethers = require("ethers");
+const { Alchemy, Network, Utils } = require("alchemy-sdk");
 require("dotenv").config();
 const Moralis = require("moralis").default;
 const fs = require("fs");
@@ -91,14 +111,7 @@ const burnedSeignorage = async (Block1, Block2) => {
     totBurnedList.push(parseInt(totBurned, 16) / 10 ** 27);
     totBurnedBlockNumber.push(unstakeLogs[i].blockNumber);
     totBurnedTotal = totBurnedTotal + parseInt(totBurned, 16) / 10 ** 27;
-    //console.log("totBurned:", parseInt(totBurned, 16) / 10 ** 27);
   }
-  /*
-  console.log("-----------");
-  console.log("totBurnedTotal:", Number(totBurnedTotal) / 10 ** 27);
-  console.log("totBurned list is", totBurnedList);
-  console.log("Block which produced totBurned is ", totBurnedBlockNumber);
-  */
 
   // Seigmanager (patched)
   //add up all the burned tot
@@ -108,13 +121,6 @@ const burnedSeignorage = async (Block1, Block2) => {
       dataPosition = 2;
       start = (dataPosition - 1) * 64;
       totBurned = "";
-      //console.log("i:", i, "/", logsLength - 1);
-      //console.log("patchedUnstakeLogs[i].data:", patchedUnstakeLogs[i].data);
-      //console.log(
-      //  "patchedUnstakeLogs[i].blockNumber:",
-      //  patchedUnstakeLogs[i].blockNumber
-      //);
-      //console.log("patchedUnstakeLogs[i]:", patchedUnstakeLogs[i]);
       let currentData2 = patchedUnstakeLogs[i].data.split("");
       for (let j = start; j < 64 + start; j++) {
         totBurned = totBurned + currentData2[j + 2];
@@ -126,49 +132,6 @@ const burnedSeignorage = async (Block1, Block2) => {
   }
 
   return totBurnedTotal;
-
-  /*
-  // Patched Seigmanager Proxy (old version)
-  //add up all the burned tot
-  logsLength = patchedUnstakeLogs.length - 1;
-  console.log(patchedUnstakeLogs[logsLength]);
-  patchedTotBurnedTotal = BigInt(0);
-  patchedTotBurnedList = [];
-  patchedTotBurnedBlockNumber = [];
-
-  for (let i = 0; i < logsLength; i++) {
-    dataPosition = 2;
-    start = (dataPosition - 1) * 64;
-    totBurned = "";
-    let currentData2 = patchedUnstakeLogs[i].data.split("");
-    for (let j = start; j < 64 + start; j++) {
-      totBurned = totBurned + currentData2[j + 2];
-    }
-    patchedTotBurnedList.push(parseInt(totBurned, 16));
-    patchedTotBurnedBlockNumber.push(patchedUnstakeLogs[i].blockNumber);
-    patchedTotBurnedTotal = patchedTotBurnedTotal + BigInt("0x" + totBurned);
-    console.log("totBurned:", parseInt(totBurned, 16) / 10 ** 27);
-  }
-  console.log("-----------");
-  console.log("totBurnedTotal:", Number(totBurnedTotal) / 10 ** 27);
-  console.log(
-    "patchedTotBurnedTotal:",
-    Number(patchedTotBurnedTotal) / 10 ** 27
-  );
-  console.log(
-    "CombinedTotBurnedTotal:",
-    Number(patchedTotBurnedTotal + totBurnedTotal) / 10 ** 27
-  );
-  console.log("-----------");
-  console.log("totBurned list is", totBurnedList);
-  console.log("patchedTotBurned list is", patchedTotBurnedList);
-  console.log("-----------");
-  console.log("Block which produced totBurned is ", totBurnedBlockNumber);
-  console.log(
-    "Block which produced patchedTotBurned is ",
-    patchedTotBurnedBlockNumber
-  );
-  */
 };
 
 const updateCSV = async () => {
