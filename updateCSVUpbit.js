@@ -41,7 +41,7 @@ const updateCSV = async () => {
 
     // Get relevant blocks based on the last block //list of unix epoch time based on https://docs.google.com/spreadsheets/d/1-4dT3nS4q7RwLgGI6rQ7M1hPx9XHI-Ryw1rkBCvTdcs/edit#gid=681869004 (use https://delim.co/# for comma)
     let unixEpochTimeList = fs
-      .readFileSync("./data/unixEpochTimeList.csv")
+      .readFileSync("./data/upbit/unixEpochTimeListUpbit.csv")
       .toString("utf-8")
       .split(",")
       .map(Number);
@@ -85,9 +85,9 @@ const updateCSV = async () => {
 
     //write the output
     let fileName =
-      "data/block_" +
+      "data/upbit/block_" +
       blockNumberList[blockNumberList.length - 1].toString() +
-      "_stakedTON.csv";
+      "_stakedTON_Upbit.csv";
     let header = "Block number, Staked (W)TON"; // Add the header
     let data = completeList
       .map(([blockNumber, stakedTON]) => `${blockNumber}, ${stakedTON}`)
@@ -121,7 +121,8 @@ const updateCSV = async () => {
     /// 2. Begin update burnedTON
     ///
     let blockNumberListEvents = blockNumberList;
-    blockNumberListEvents.unshift(blockNumberListEvents[0]); // block number is based on Tokamak Network TON contract deployment: https://etherscan.io/tx/0x2d66feb7bdaba9f5b2c22e8ec4bfa7b012b2ff655bd93017df203d49747565b2
+    blockNumberListEvents.unshift(10643261); // block number is based on Tokamak Network TON contract deployment: https://etherscan.io/tx/0x2d66feb7bdaba9f5b2c22e8ec4bfa7b012b2ff655bd93017df203d49747565b2
+    console.log("blockNumberListEvents:",blockNumberListEvents);
     
     completeList = [];
     let burnedTONList = [];
@@ -145,9 +146,9 @@ const updateCSV = async () => {
 
     // write the output
     fileName =
-      "data/block_" +
+      "data/upbit/block_" +
       blockNumberListEvents[blockNumberListEvents.length - 1].toString() +
-      "_burnedTON.csv";
+      "_burnedTON_Upbit.csv";
 
     header = "Block number, Burned TON"; // Add the header
     data = completeList
@@ -195,9 +196,9 @@ const updateCSV = async () => {
 
     // write the output
     fileName =
-      "data/block_" +
+      "data/upbit/block_" +
       blockNumberListEvents[blockNumberListEvents.length - 1].toString() +
-      "_lockedTON.csv";
+      "_lockedTON_Upbit.csv";
 
     header = "Block number, Locked TON, Spent TON"; // Add the header
     data = completeList
@@ -244,9 +245,9 @@ const updateCSV = async () => {
 
     // write the output
     fileName =
-      "data/block_" +
+      "data/upbit/block_" +
       blockNumberListEvents[blockNumberListEvents.length - 1].toString() +
-      "_burnedSeigTON.csv";
+      "_burnedSeigTON_Upbit.csv";
 
     header = "Block number, Burned seignorage"; // Add the header
     data = completeList
@@ -289,9 +290,9 @@ const updateCSV = async () => {
 
     // write the output
     fileName =
-      "data/block_" +
+      "data/upbit/block_" +
       blockNumberListEvents[blockNumberListEvents.length - 1].toString() +
-      "_reducedSeigTON.csv";
+      "_reducedSeigTON_Upbit.csv";
 
       header = "Block number, Reduced seignorage"; // Add the header
       data = completeList.map(([blockNumber, reducedTON]) => `${blockNumber}, ${reducedTON}`).join("\n"); // Format the data
