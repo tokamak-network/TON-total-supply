@@ -85,9 +85,7 @@ const updateCSV = async () => {
 
     //write the output
     let fileName =
-      "data/block_" +
-      blockNumberList[blockNumberList.length - 1].toString() +
-      "_stakedTON.csv";
+      "data/stakedTON_column_Z.csv";
     let header = "Block number, Staked (W)TON"; // Add the header
     let data = completeList
       .map(([blockNumber, stakedTON]) => `${blockNumber}, ${stakedTON}`)
@@ -145,9 +143,7 @@ const updateCSV = async () => {
 
     // write the output
     fileName =
-      "data/block_" +
-      blockNumberListEvents[blockNumberListEvents.length - 1].toString() +
-      "_burnedTON.csv";
+      "data/burnedTON_column_K.csv";
 
     header = "Block number, Burned TON"; // Add the header
     data = completeList
@@ -195,9 +191,7 @@ const updateCSV = async () => {
 
     // write the output
     fileName =
-      "data/block_" +
-      blockNumberListEvents[blockNumberListEvents.length - 1].toString() +
-      "_lockedTON.csv";
+      "data/lockedTON_column_W.csv";
 
     header = "Block number, Locked TON, Spent TON"; // Add the header
     data = completeList
@@ -244,9 +238,7 @@ const updateCSV = async () => {
 
     // write the output
     fileName =
-      "data/block_" +
-      blockNumberListEvents[blockNumberListEvents.length - 1].toString() +
-      "_burnedSeigTON.csv";
+      "data/burnedSeigTON_column_H.csv";
 
     header = "Block number, Burned seignorage"; // Add the header
     data = completeList
@@ -289,9 +281,7 @@ const updateCSV = async () => {
 
     // write the output
     fileName =
-      "data/block_" +
-      blockNumberListEvents[blockNumberListEvents.length - 1].toString() +
-      "_reducedSeigTON.csv";
+      "data/reducedSeigTON_column_I.csv";
 
       header = "Block number, Reduced seignorage"; // Add the header
       data = completeList.map(([blockNumber, reducedTON]) => `${blockNumber}, ${reducedTON}`).join("\n"); // Format the data
@@ -303,9 +293,7 @@ const updateCSV = async () => {
         }
         console.log("The file was saved!");
       });
-    ///
-    /// End update reducedSeignorage
-    ///
+
       process.exit(0);
     } catch (error) {
       console.log(error);

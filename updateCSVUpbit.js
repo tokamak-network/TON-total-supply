@@ -85,9 +85,7 @@ const updateCSV = async () => {
 
     //write the output
     let fileName =
-      "data/upbit/block_" +
-      blockNumberList[blockNumberList.length - 1].toString() +
-      "_stakedTON_Upbit.csv";
+      "data/upbit/stakedTON_column_Z.csv";
     let header = "Block number, Staked (W)TON"; // Add the header
     let data = completeList
       .map(([blockNumber, stakedTON]) => `${blockNumber}, ${stakedTON}`)
@@ -146,9 +144,7 @@ const updateCSV = async () => {
 
     // write the output
     fileName =
-      "data/upbit/block_" +
-      blockNumberListEvents[blockNumberListEvents.length - 1].toString() +
-      "_burnedTON_Upbit.csv";
+      "data/upbit/burnedTON_column_K";
 
     header = "Block number, Burned TON"; // Add the header
     data = completeList
@@ -196,9 +192,7 @@ const updateCSV = async () => {
 
     // write the output
     fileName =
-      "data/upbit/block_" +
-      blockNumberListEvents[blockNumberListEvents.length - 1].toString() +
-      "_lockedTON_Upbit.csv";
+      "data/upbit/lockedTON_column_W.csv";
 
     header = "Block number, Locked TON, Spent TON"; // Add the header
     data = completeList
@@ -245,9 +239,7 @@ const updateCSV = async () => {
 
     // write the output
     fileName =
-      "data/upbit/block_" +
-      blockNumberListEvents[blockNumberListEvents.length - 1].toString() +
-      "_burnedSeigTON_Upbit.csv";
+      "data/upbit/burnedSeigTON_column_H.csv";
 
     header = "Block number, Burned seignorage"; // Add the header
     data = completeList
@@ -290,9 +282,7 @@ const updateCSV = async () => {
 
     // write the output
     fileName =
-      "data/upbit/block_" +
-      blockNumberListEvents[blockNumberListEvents.length - 1].toString() +
-      "_reducedSeigTON_Upbit.csv";
+      "data/upbit/reducedSeigTON_column_I.csv";
 
       header = "Block number, Reduced seignorage"; // Add the header
       data = completeList.map(([blockNumber, reducedTON]) => `${blockNumber}, ${reducedTON}`).join("\n"); // Format the data
@@ -307,6 +297,7 @@ const updateCSV = async () => {
     ///
     /// End update reducedSeignorage
     ///
+
       process.exit(0);
     } catch (error) {
       console.log(error);
