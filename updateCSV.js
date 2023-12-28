@@ -47,6 +47,7 @@ const updateCSV = async () => {
       .map(Number);
 
     let blockNumberList = [];
+    let completeList2 =[];
     for (let i = 0; i < unixEpochTimeList.length; i++) {
       console.log("........................");
       console.log(
@@ -62,8 +63,33 @@ const updateCSV = async () => {
           date: formatedDate,
         });
         blockNumberList.push(response.raw.block);
+        completeList2.push([unixEpochTimeList[i], response.raw.block]);
       }
     }
+
+
+    ///
+    /// 0. block number
+    ///
+    // write the output
+    let fileName =
+      "data/blockNumber_column_F.csv";
+
+    let header = "Unix Epoch time, Block number"; // Add the header
+    let data = completeList2.map(([unixEpochTime, blockNumber]) => `${unixEpochTime}, ${blockNumber}`).join("\n"); // Format the data
+  
+    let output = `${header}\n${data}`; // Combine the header and data
+      fs.writeFileSync(fileName, output, function (err) {
+        if (err) {
+          return console.log(err);
+        }
+        console.log("The file was saved!");
+      });
+    ///
+    /// End update block number
+    ///
+
+
 
     ///
     /// 1. Begin update stakedTON
@@ -84,14 +110,14 @@ const updateCSV = async () => {
     }
 
     //write the output
-    let fileName =
+    fileName =
       "data/stakedTON_column_Z.csv";
-    let header = "Block number, Staked (W)TON"; // Add the header
-    let data = completeList
+    header = "Block number, Staked (W)TON"; // Add the header
+    data = completeList
       .map(([blockNumber, stakedTON]) => `${blockNumber}, ${stakedTON}`)
       .join("\n"); // Format the data
 
-    let output = `${header}\n${data}`; // Combine the header and data
+    output = `${header}\n${data}`; // Combine the header and data
     fs.writeFileSync(fileName, output, function (err) {
       if (err) {
         return console.log(err);
