@@ -47,10 +47,7 @@ const burnedSeignorage = async (Block1, Block2) => {
   );
 
   //block data retrieval
-  var startBlock = Math.max(10837698, Block1 + 1); // 10837698 begin block for seignorage https://etherscan.io/tx/0x4750dd10e22f993cea3052dfc9872ad4d25efa68cb21938ad429dd59b912b8b5
-  if (Block1 == 10643305) {
-    startBlock = 10643305;
-  }
+  var startBlock = Block1;
   const endBlock = Block2;
 
   const patchedStartBlock = 18417894; //block 18417894 -> Patched block number based on patched contract deployment https://etherscan.io/tx/0xdde91cd2eef02b492015f5dbdcf36bc2e3bbe94627f90df85cf593df29de0561
@@ -132,89 +129,6 @@ const burnedSeignorage = async (Block1, Block2) => {
   }
 
   return totBurnedTotal;
-};
-
-const updateCSV = async () => {
-  try {
-    if (!Moralis.Core.isStarted) {
-      await Moralis.start({
-        apiKey: process.env.MORALIS_API_KEY,
-      });
-    }
-    let lastBlock = await alchemy.core.getBlock();
-    let lastUnix_timestamp = lastBlock.timestamp;
-
-    // Get relevant blocks based on the last block //list of unix epoch time based on https://docs.google.com/spreadsheets/d/1-4dT3nS4q7RwLgGI6rQ7M1hPx9XHI-Ryw1rkBCvTdcs/edit#gid=681869004 (use https://delim.co/# for comma)
-
-    let unixEpochTimeList = fs
-      .readFileSync("./data/unixEpochTimeList.csv")
-      .toString("utf-8")
-      .split(",")
-      .map(Number);
-    let blockNumberList = [];
-    for (let i = 0; i < unixEpochTimeList.length; i++) {
-      console.log("........................");
-      console.log(
-        "Moralis API data retrieval:",
-        i + 1,
-        "/",
-        unixEpochTimeList.length
-      );
-      if (unixEpochTimeList[i] <= lastUnix_timestamp) {
-        const formatedDate = new Date(unixEpochTimeList[i] * 1000);
-        const response = await Moralis.EvmApi.block.getDateToBlock({
-          chain: "0x1",
-          date: formatedDate,
-        });
-        blockNumberList.push(response.raw.block);
-      }
-    }
-    blockNumberList.unshift(blockNumberList[0]); //adds dummy data for the first entry
-    
-    let completeList = [];
-    let burnedTONList = [];
-    for (let i = 0; i < blockNumberList.length - 1; i++) {
-      console.log("........................");
-      console.log(
-        "Alchemy API data retrieval:",
-        i + 1,
-        "/",
-        blockNumberList.length - 1
-      );
-      burnedTONList[i] = await burnedSeignorage(
-        blockNumberList[i],
-        blockNumberList[i + 1]
-      );
-    }
-    for (let i = 0; i < blockNumberList.length - 1; i++) {
-      completeList.push([blockNumberList[i + 1], burnedTONList[i]]);
-    }
-    console.log("blockNumber burnedSeig:", completeList);
-
-    // write the output
-    const fileName =
-      "data/block_" +
-      blockNumberList[blockNumberList.length - 1].toString() +
-      "_burnedSeigTON.csv";
-
-    const header = "Block number, Burned seignorage"; // Add the header
-    const data = completeList
-      .map(([blockNumber, burnedTON]) => `${blockNumber}, ${burnedTON}`)
-      .join("\n"); // Format the data
-
-    const output = `${header}\n${data}`; // Combine the header and data
-    fs.writeFileSync(fileName, output, function (err) {
-      if (err) {
-        return console.log(err);
-      }
-      console.log("The file was saved!");
-    });
-
-    process.exit(0);
-  } catch (error) {
-    console.log(error);
-    process.exit(1);
-  }
 };
 
 module.exports = {

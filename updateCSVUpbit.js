@@ -157,7 +157,7 @@ const updateCSV = async () => {
         blockNumberListEvents.length - 1
       );
       burnedTONList[i] = await burnedTON.burnedTON(
-        blockNumberListEvents[i],
+        blockNumberListEvents[i]+1,
         blockNumberListEvents[i + 1]
       );
     }
@@ -201,7 +201,7 @@ const updateCSV = async () => {
         blockNumberListEvents.length - 1
       );
       [lockedTONList[i], spentTONList[i]] = await lockedTON.lockedTON(
-        blockNumberListEvents[i],
+        blockNumberListEvents[i]+1,
         blockNumberListEvents[i + 1]
       );
     }
@@ -252,7 +252,7 @@ const updateCSV = async () => {
         blockNumberListEvents.length - 1
       );
       burnedSeignorageList[i] = await burnedSeignorage.burnedSeignorage(
-        blockNumberListEvents[i],
+        blockNumberListEvents[i]+1,
         blockNumberListEvents[i + 1]
       );
     }
@@ -295,7 +295,7 @@ const updateCSV = async () => {
         blockNumberListEvents.length - 1
       );
       reducedTONList[i] = await reducedSeignorage.reducedSeignorage(
-        blockNumberListEvents[i],
+        blockNumberListEvents[i]+1,
         blockNumberListEvents[i + 1]
       );
     }

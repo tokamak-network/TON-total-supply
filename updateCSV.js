@@ -145,7 +145,7 @@ const updateCSV = async () => {
     /// 2. Begin update burnedTON
     ///
     let blockNumberListEvents = blockNumberList;
-    blockNumberListEvents.unshift(blockNumberListEvents[0]); // block number is based on Tokamak Network TON contract deployment: https://etherscan.io/tx/0x2d66feb7bdaba9f5b2c22e8ec4bfa7b012b2ff655bd93017df203d49747565b2
+    blockNumberListEvents.unshift(10643261); // block number is based on Tokamak Network TON contract deployment: https://etherscan.io/tx/0x2d66feb7bdaba9f5b2c22e8ec4bfa7b012b2ff655bd93017df203d49747565b2
     
     completeList = [];
     let burnedTONList = [];
@@ -158,7 +158,7 @@ const updateCSV = async () => {
         blockNumberListEvents.length - 1
       );
       burnedTONList[i] = await burnedTON.burnedTON(
-        blockNumberListEvents[i],
+        blockNumberListEvents[i]+1,
         blockNumberListEvents[i + 1]
       );
     }
@@ -202,7 +202,7 @@ const updateCSV = async () => {
         blockNumberListEvents.length - 1
       );
       [lockedTONList[i], spentTONList[i]] = await lockedTON.lockedTON(
-        blockNumberListEvents[i],
+        blockNumberListEvents[i]+1,
         blockNumberListEvents[i + 1]
       );
     }
@@ -253,7 +253,7 @@ const updateCSV = async () => {
         blockNumberListEvents.length - 1
       );
       burnedSeignorageList[i] = await burnedSeignorage.burnedSeignorage(
-        blockNumberListEvents[i],
+        blockNumberListEvents[i]+1,
         blockNumberListEvents[i + 1]
       );
     }
@@ -296,7 +296,7 @@ const updateCSV = async () => {
         blockNumberListEvents.length - 1
       );
       reducedTONList[i] = await reducedSeignorage.reducedSeignorage(
-        blockNumberListEvents[i],
+        blockNumberListEvents[i]+1,
         blockNumberListEvents[i + 1]
       );
     }

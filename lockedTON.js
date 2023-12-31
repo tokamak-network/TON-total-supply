@@ -36,10 +36,7 @@ const lockedTON = async (Block1, Block2) => {
     ["0x2520CD65BAa2cEEe9E6Ad6EBD3F45490C42dd303"]
   );
 
-  var startBlock = Math.min(Math.max(10643305, Block1 + 1)); // 10643305 block -> earliest block number for record | 10643261 block -> TON contract deployment https://etherscan.io/tx/0x2d66feb7bdaba9f5b2c22e8ec4bfa7b012b2ff655bd93017df203d49747565b2
-  if (Block1 == 10643305) {
-    startBlock = 10643305;
-  }
+  var startBlock = Block1;
   const endBlock = Block2; 
 
   //alchemy
@@ -76,85 +73,6 @@ const lockedTON = async (Block1, Block2) => {
   }
 
   return [locked/ 10 ** 18, spent/ 10 ** 18];
-};
-
-const updateCSV = async () => {
-  try {
-    if (!Moralis.Core.isStarted) {
-    await Moralis.start({
-      apiKey: process.env.MORALIS_API_KEY,
-    });
-  }
-    let lastBlock = await alchemy.core.getBlock();
-    let lastUnix_timestamp = lastBlock.timestamp;
-
-    // Get relevant blocks based on the last block //list of unix epoch time based on https://docs.google.com/spreadsheets/d/1-4dT3nS4q7RwLgGI6rQ7M1hPx9XHI-Ryw1rkBCvTdcs/edit#gid=681869004 (use https://delim.co/# for comma)
-    let unixEpochTimeList = fs.readFileSync("./data/unixEpochTimeList.csv").toString('utf-8').split(',').map(Number);
-    let blockNumberList = [];
-  
-    for (let i = 0; i < unixEpochTimeList.length; i++) {
-      console.log("........................");
-      console.log(
-        "Moralis API data retrieval:",
-        i + 1,
-        "/",
-        unixEpochTimeList.length
-      );
-      if (unixEpochTimeList[i] <= lastUnix_timestamp) {
-        const formatedDate = new Date(unixEpochTimeList[i] * 1000);
-        const response = await Moralis.EvmApi.block.getDateToBlock({
-          chain: "0x1",
-          date: formatedDate,
-        });
-        blockNumberList.push(response.raw.block);
-      }
-    }
-
-    blockNumberList.unshift(blockNumberList[0]); //adds dummy data for the first entry
-    
-    let completeList = [];
-    let lockedTONList = [];
-    let spentTONList = [];
-    for (let i = 0; i < blockNumberList.length - 1; i++) {
-      console.log("........................");
-      console.log(
-        "Alchemy API data retrieval:",
-        i + 1,
-        "/",
-        blockNumberList.length - 1
-      );
-      [lockedTONList[i],spentTONList[i] ] = await lockedTON(
-        blockNumberList[i],
-        blockNumberList[i + 1]
-      );
-    }
-    for (let i = 0; i < blockNumberList.length - 1; i++) {
-      completeList.push([blockNumberList[i + 1], lockedTONList[i], spentTONList[i]]);
-    }
-    console.log("blockNumber lockedTON spentTON:", completeList);
-
-    // write the output
-    const fileName =
-      "data/block_" +
-      blockNumberList[blockNumberList.length - 1].toString() +
-      "_lockedTON.csv";
-
-      const header = "Block number, Locked TON, Spent TON"; // Add the header
-      const data = completeList.map(([blockNumber, lockedTON, spentTON]) => `${blockNumber}, ${lockedTON}, ${spentTON}`).join("\n"); // Format the data
-  
-      const output = `${header}\n${data}`; // Combine the header and data
-      fs.writeFileSync(fileName, output, function (err) {
-        if (err) {
-          return console.log(err);
-        }
-        console.log("The file was saved!");
-      });
-  
-    process.exit(0);
-  } catch (error) {
-    console.log(error);
-    process.exit(1);
-  }
 };
 
 module.exports = {

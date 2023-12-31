@@ -38,12 +38,8 @@ const reducedSeignorage = async (Block1, Block2) => {
     "SeigGiven",
     []
   );
-  var startBlock = Math.min(Math.max(10837698, Block1 + 1), 13497999); // 10837698 begin block for seignorage https://etherscan.io/tx/0x4750dd10e22f993cea3052dfc9872ad4d25efa68cb21938ad429dd59b912b8b5
-  if (Block1 == 10643305) {
-    startBlock = 10643305;
-  }
-
-  const endBlock = Math.min(Block2, 13497999); //block 13497999-> Powerton seig rate changed back to 10% https://etherscan.io/tx/0x7a9eb4c3e80ee9e4e0e9c2a6d751a90da8a951d4644100335a4eb6dfbbc2fe33
+  var startBlock = Block1;
+  const endBlock = Block2; //block 13497999-> Powerton seig rate changed back to 10% https://etherscan.io/tx/0x7a9eb4c3e80ee9e4e0e9c2a6d751a90da8a951d4644100335a4eb6dfbbc2fe33
 
   //alchemy
   const logs = await alchemy.core.getLogs({
@@ -91,83 +87,6 @@ const reducedSeignorage = async (Block1, Block2) => {
     }
   }  
   return unmintedSeig / 10 ** 27;
-};
-
-const updateCSV = async () => {
-  try {
-    if (!Moralis.Core.isStarted) {
-    await Moralis.start({
-      apiKey: process.env.MORALIS_API_KEY,
-    });
-  }
-    let lastBlock = await alchemy.core.getBlock();
-    let lastUnix_timestamp = lastBlock.timestamp;
-
-    // Get relevant blocks based on the last block //list of unix epoch time based on https://docs.google.com/spreadsheets/d/1-4dT3nS4q7RwLgGI6rQ7M1hPx9XHI-Ryw1rkBCvTdcs/edit#gid=681869004 (use https://delim.co/# for comma)
-    let unixEpochTimeList = fs.readFileSync("./data/unixEpochTimeList.csv").toString('utf-8').split(',').map(Number);
-    let blockNumberList = [];
-    for (let i = 0; i < unixEpochTimeList.length; i++) {
-      console.log("........................");
-      console.log(
-        "Moralis API data retrieval:",
-        i + 1,
-        "/",
-        unixEpochTimeList.length
-      );
-      if (unixEpochTimeList[i] <= lastUnix_timestamp) {
-        const formatedDate = new Date(unixEpochTimeList[i] * 1000);
-        const response = await Moralis.EvmApi.block.getDateToBlock({
-          chain: "0x1",
-          date: formatedDate,
-        });
-        blockNumberList.push(response.raw.block);
-      }
-    }
-
-    blockNumberList.unshift(blockNumberList[0]); //adds dummy data for the first entry
-    
-    let completeList = [];
-    let reducedTONList = [];
-    for (let i = 0; i < blockNumberList.length - 1; i++) {
-      console.log("........................");
-      console.log(
-        "Alchemy API data retrieval:",
-        i + 1,
-        "/",
-        blockNumberList.length - 1
-      );
-      reducedTONList[i] = await reducedSeignorage(
-        blockNumberList[i],
-        blockNumberList[i + 1]
-      );
-    }
-    for (let i = 0; i < blockNumberList.length - 1; i++) {
-      completeList.push([blockNumberList[i + 1], reducedTONList[i]]);
-    }
-    console.log("blockNumber reducedSeig:", completeList);
-
-    // write the output
-    const fileName =
-      "data/block_" +
-      blockNumberList[blockNumberList.length - 1].toString() +
-      "_reducedSeigTON.csv";
-
-      const header = "Block number, Reduced seignorage"; // Add the header
-      const data = completeList.map(([blockNumber, reducedTON]) => `${blockNumber}, ${reducedTON}`).join("\n"); // Format the data
-  
-      const output = `${header}\n${data}`; // Combine the header and data
-      fs.writeFileSync(fileName, output, function (err) {
-        if (err) {
-          return console.log(err);
-        }
-        console.log("The file was saved!");
-      });
-  
-    process.exit(0);
-  } catch (error) {
-    console.log(error);
-    process.exit(1);
-  }
 };
 
 module.exports = {
