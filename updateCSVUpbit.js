@@ -168,7 +168,7 @@ const updateCSV = async () => {
 
     // write the output
     fileName =
-      "data/upbit/upbit_burnedTON_column_K";
+      "data/upbit/upbit_burnedTON_column_K.csv";
 
     header = "Block number, Burned TON"; // Add the header
     data = completeList
