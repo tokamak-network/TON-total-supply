@@ -41,7 +41,7 @@ const updateCSV = async () => {
 
     // Get relevant blocks based on the last block //list of unix epoch time based on https://docs.google.com/spreadsheets/d/1-4dT3nS4q7RwLgGI6rQ7M1hPx9XHI-Ryw1rkBCvTdcs/edit#gid=681869004 (use https://delim.co/# for comma)
     let unixEpochTimeList = fs
-      .readFileSync("./data/upbit/unixEpochTimeListUpbit.csv")
+      .readFileSync("./data/upbit/upbit_unixEpochTimeList.csv")
       .toString("utf-8")
       .split(",")
       .map(Number);
@@ -72,7 +72,7 @@ const updateCSV = async () => {
     ///
     // write the output
     let fileName =
-      "data/upbit/blockNumber_column_F.csv";
+      "data/upbit/upbit_blockNumber_column_F.csv";
 
     let header = "Unix Epoch time, Block number"; // Add the header
     let data = completeList2.map(([unixEpochTime, blockNumber]) => `${unixEpochTime}, ${blockNumber}`).join("\n"); // Format the data
@@ -109,7 +109,7 @@ const updateCSV = async () => {
 
     //write the output
     fileName =
-      "data/upbit/stakedTON_column_Z.csv";
+      "data/upbit/upbit_stakedTON_column_Z.csv";
     header = "Block number, Staked (W)TON"; // Add the header
     data = completeList
       .map(([blockNumber, stakedTON]) => `${blockNumber}, ${stakedTON}`)
@@ -168,7 +168,7 @@ const updateCSV = async () => {
 
     // write the output
     fileName =
-      "data/upbit/burnedTON_column_K";
+      "data/upbit/upbit_burnedTON_column_K";
 
     header = "Block number, Burned TON"; // Add the header
     data = completeList
@@ -216,7 +216,7 @@ const updateCSV = async () => {
 
     // write the output
     fileName =
-      "data/upbit/lockedTON_column_W.csv";
+      "data/upbit/upbit_lockedTON_column_W.csv";
 
     header = "Block number, Locked TON, Spent TON"; // Add the header
     data = completeList
@@ -263,7 +263,7 @@ const updateCSV = async () => {
 
     // write the output
     fileName =
-      "data/upbit/burnedSeigTON_column_H.csv";
+      "data/upbit/upbit_burnedSeigTON_column_H.csv";
 
     header = "Block number, Burned seignorage"; // Add the header
     data = completeList
@@ -306,7 +306,7 @@ const updateCSV = async () => {
 
     // write the output
     fileName =
-      "data/upbit/reducedSeigTON_column_I.csv";
+      "data/upbit/upbit_reducedSeigTON_column_I.csv";
 
       header = "Block number, Reduced seignorage"; // Add the header
       data = completeList.map(([blockNumber, reducedTON]) => `${blockNumber}, ${reducedTON}`).join("\n"); // Format the data
