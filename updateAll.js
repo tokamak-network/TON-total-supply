@@ -1,5 +1,5 @@
 /**
- * This JavaScript file calculates the total supply and circulating supply of TON (Token) based on various factors.
+ * This JavaScript file calculates the total supply and circulating supply of TON (Tokamak Network) based on various factors.
  * It imports required modules, configures the Alchemy SDK, and defines the main function.
  * The main function updates the necessary data, retrieves the latest block information, and performs calculations.
  * The calculated amounts are then printed to the console.

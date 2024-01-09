@@ -1,5 +1,5 @@
 /**
- * This script updates and generates CSV files for different metrics related to TON (Telegram Open Network) supply.
+ * This script updates and generates CSV files for different metrics related to TON (Tokamak Network) supply.
  * It retrieves data using the Alchemy API and writes the output to CSV files.
  * The metrics include burned TON, locked TON, burned seignorage, and reduced seignorage.
  * The script iterates over a list of block numbers and calculates the corresponding metrics for each block.
