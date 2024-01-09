@@ -28,7 +28,7 @@ const alchemy = new Alchemy(config);
 // Main function
 const runMain = async () => {
     // Update burnedTON, lockedTON, burnedSiegTON, reducedSeigTON, stakedTON
-    await update.updateCSV();
+    //await update.updateCSV();
 
     // Set the start block for calculations
     let startBlock = 10643261; // TON contract deployment https://etherscan.io/tx/0x2d66feb7bdaba9f5b2c22e8ec4bfa7b012b2ff655bd93017df203d49747565b2
