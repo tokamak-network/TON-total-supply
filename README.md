@@ -4,7 +4,8 @@ This repository contains JavaScript files related to the TON (Tokamak Network) t
 
 ## Files
 
-- `main.js`: Main file for TON total supply and circulating supply. See outputs for the results.
+- `main.js`: Main file for TON total supply and circulating supply. 
+- `updateAll.js`: Main file for updating based on fixed schedule. Check data folder for the results.
 - `updateCSV.js`: File for updating CSV data related to TON total supply.
 - `burnedTON.js`: File for calculating the burned TON tokens at 0x0000...0001.
 - `burnedSeignorage.js`: File for calculating the burned seignorage of TON due to unstaking before seignorage is updated.

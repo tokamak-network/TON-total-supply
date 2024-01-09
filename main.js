@@ -1,7 +1,7 @@
 /**
  * This JavaScript file calculates the total supply and circulating supply of TON (Token) based on various factors.
  * It imports required modules, configures the Alchemy SDK, and defines the main function.
- * The main function updates the necessary data, retrieves the latest block information, and performs calculations.
+ * The main function retrieves the latest block information, and performs calculations.
  * The calculated amounts are then printed to the console.
  * The total supply and circulating supply are calculated by subtracting the burned, reduced, locked, and staked amounts from the initial supply.
  * The final results are displayed in the console.
@@ -97,6 +97,34 @@ const runMain = async () => {
         "% of total supply)"
     );
     console.log("............................................");
+    console.log(".............Price Dashboard.............");
+    console.log("...........Does not consider burned Seignorage...........");
+    console.log("............................................");
+
+        // Calculate the total supply
+        totalSupply = totalSupply + burnedSeignorageAmount;
+        console.log("Total Supply for TON is :", totalSupply, "TON");
+    
+        // Calculate the circulating supply
+        circulatingSupply = totalSupply - stakedTONAmount - lockedTONAmount;
+        console.log(
+            "Circulating Supply:",
+            circulatingSupply,
+            "TON (",
+            Math.round((circulatingSupply / totalSupply) * 100),
+            "% of total supply)"
+        );
+    
+        // Calculate the circulating supply (Upbit), includes staked TON as circulating supply
+        circulatingSupplyUpbit = totalSupply - lockedTONAmount;
+        console.log(
+            "Circulating Supply (Upbit):",
+            circulatingSupplyUpbit,
+            "TON (",
+            Math.round((circulatingSupplyUpbit / totalSupply) * 100),
+            "% of total supply)"
+        );
+        console.log("............................................");
 };
 
 // Run the main function
