@@ -23,7 +23,7 @@ const config = {
 const alchemy = new Alchemy(config);
 const runMain = async () => {
     // Update burnedTON, lockedTON, burnedSiegTON, reducedSeigTON, stakedTON
-    await update.updateCSV();
+    //await update.updateCSV();
     await updateUpbit.updateCSV();
 };
 
