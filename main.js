@@ -74,7 +74,7 @@ const runMain = async () => {
     console.log("............................................");
 
     // Calculate the total supply
-    totalSupply = totalSupply - burnedTONAmount - burnedSeignorageAmount - reducedSeignorageAmount;
+    totalSupply = totalSupply - burnedTONAmount - reducedSeignorageAmount;
     console.log("Total Supply for TON is :", totalSupply, "TON");
 
     // Calculate the circulating supply
@@ -102,7 +102,6 @@ const runMain = async () => {
     console.log("............................................");
 
         // Calculate the total supply
-        totalSupply = totalSupply + burnedSeignorageAmount;
         console.log("Total Supply for TON is :", totalSupply, "TON");
     
         // Calculate the circulating supply
