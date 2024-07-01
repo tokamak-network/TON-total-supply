@@ -263,7 +263,7 @@ const updateCSVUpbit = async () => {
 
     // write the output
     fileName =
-      "data/upbit/upbit_burnedSeigTON_lockedWTON.csv";
+      "data/upbit/upbit_burnedSeigSWTON.csv";
 
     header = "Block number, Burned seignorage"; // Add the header
     data = completeList

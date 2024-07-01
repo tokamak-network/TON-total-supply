@@ -260,15 +260,15 @@ const updateCSV = async () => {
     for (let i = 0; i < blockNumberListEvents.length - 1; i++) {
       completeList.push([blockNumberListEvents[i + 1], burnedSeignorageList[i]]);
     }
-    console.log("blockNumber burnedSeig:", completeList);
+    console.log("blockNumber burnedSWTON:", completeList);
 
     // write the output
     fileName =
-      "data/burnedSeigTON_lockedWTON.csv";
+      "data/burnedSeigSWTON.csv";
 
-    header = "Block number, Burned seignorage"; // Add the header
+    header = "Block number, Burned SWTON seignorage"; // Add the header
     data = completeList
-      .map(([blockNumber, burnedTON]) => `${blockNumber}, ${burnedTON}`)
+      .map(([blockNumber, burnedSWTON]) => `${blockNumber}, ${burnedSWTON}`)
       .join("\n"); // Format the data
 
     output = `${header}\n${data}`; // Combine the header and data

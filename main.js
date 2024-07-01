@@ -46,7 +46,7 @@ const runMain = async () => {
     let burnedTONAmount = await burnedTON.burnedTON(startBlock, lastBlockNumber);
 
     // Calculate the burned TON Seignorage amount
-    let burnedSeignorageAmount = await burnedSeignorage.burnedSeignorage(startBlock, lastBlockNumber);
+    let burnedSWTONSeignorageAmount = await burnedSeignorage.burnedSeignorage(startBlock, lastBlockNumber);
 
     // Calculate the reduced TON Seignorage amount
     let reducedSeignorageAmount = await reducedSeignorage.reducedSeignorage(startBlock, lastBlockNumber);
@@ -67,7 +67,7 @@ const runMain = async () => {
     // Print the calculated amounts
     console.log("............................................");
     console.log("Burned TON is :", burnedTONAmount);
-    console.log("Burned TON Seignorage is :", burnedSeignorageAmount);
+    console.log("Burned TON Seignorage is :", burnedSWTONSeignorageAmount);
     console.log("Reduced TON Seignorage is :", reducedSeignorageAmount);
     console.log("Locked TON is :", lockedTONAmount);
     console.log("Staked TON is :", stakedTONAmount);
@@ -96,34 +96,6 @@ const runMain = async () => {
         Math.round((circulatingSupplyUpbit / totalSupply) * 100),
         "% of total supply)"
     );
-    console.log("............................................");
-    console.log(".............Price Dashboard.............");
-    console.log("...........Does not consider burned Seignorage...........");
-    console.log("............................................");
-
-        // Calculate the total supply
-        console.log("Total Supply for TON is :", totalSupply, "TON");
-    
-        // Calculate the circulating supply
-        circulatingSupply = totalSupply - stakedTONAmount - lockedTONAmount;
-        console.log(
-            "Circulating Supply:",
-            circulatingSupply,
-            "TON (",
-            Math.round((circulatingSupply / totalSupply) * 100),
-            "% of total supply)"
-        );
-    
-        // Calculate the circulating supply (Upbit), includes staked TON as circulating supply
-        circulatingSupplyUpbit = totalSupply - lockedTONAmount;
-        console.log(
-            "Circulating Supply (Upbit):",
-            circulatingSupplyUpbit,
-            "TON (",
-            Math.round((circulatingSupplyUpbit / totalSupply) * 100),
-            "% of total supply)"
-        );
-        console.log("............................................");
 };
 
 // Run the main function

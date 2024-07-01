@@ -24,7 +24,7 @@ const alchemy = new Alchemy(config);
 const runMain = async () => {
     // Update burnedTON, lockedTON, burnedSiegTON, reducedSeigTON, stakedTON
     await update.updateCSV();
-    // await updateUpbit.updateCSVUpbit(); uncomment this line to get upbit information
+    //await updateUpbit.updateCSVUpbit(); //uncomment this line to get upbit information
 };
 
 // Run the main function
