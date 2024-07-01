@@ -111,7 +111,7 @@ const updateCSV = async () => {
 
     //write the output
     fileName =
-      "data/stakedTON_column_Z.csv";
+      "data/stakedTON_column_Y.csv";
     header = "Block number, Staked (W)TON"; // Add the header
     data = completeList
       .map(([blockNumber, stakedTON]) => `${blockNumber}, ${stakedTON}`)
@@ -169,7 +169,7 @@ const updateCSV = async () => {
 
     // write the output
     fileName =
-      "data/burnedTON_column_K.csv";
+      "data/burnedTON_column_J.csv";
 
     header = "Block number, Burned TON"; // Add the header
     data = completeList
@@ -217,7 +217,7 @@ const updateCSV = async () => {
 
     // write the output
     fileName =
-      "data/lockedTON_column_W.csv";
+      "data/lockedTON+spentTON_column_V+W.csv";
 
     header = "Block number, Locked TON, Spent TON"; // Add the header
     data = completeList
@@ -264,7 +264,7 @@ const updateCSV = async () => {
 
     // write the output
     fileName =
-      "data/burnedSeigTON_column_H.csv";
+      "data/burnedSeigTON_lockedWTON.csv";
 
     header = "Block number, Burned seignorage"; // Add the header
     data = completeList
@@ -307,7 +307,7 @@ const updateCSV = async () => {
 
     // write the output
     fileName =
-      "data/reducedSeigTON_column_I.csv";
+      "data/reducedSeigTON_column_H.csv";
 
       header = "Block number, Reduced seignorage"; // Add the header
       data = completeList.map(([blockNumber, reducedTON]) => `${blockNumber}, ${reducedTON}`).join("\n"); // Format the data

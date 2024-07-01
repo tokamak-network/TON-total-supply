@@ -27,7 +27,7 @@ const config = {
 const alchemy = new Alchemy(config);
 
 // updates all csv
-const updateCSV = async () => {
+const updateCSVUpbit = async () => {
   try {
     if (!Moralis.Core.isStarted) {
       await Moralis.start({
@@ -109,7 +109,7 @@ const updateCSV = async () => {
 
     //write the output
     fileName =
-      "data/upbit/upbit_stakedTON_column_Z.csv";
+      "data/upbit/upbit_stakedTON_column_Y.csv";
     header = "Block number, Staked (W)TON"; // Add the header
     data = completeList
       .map(([blockNumber, stakedTON]) => `${blockNumber}, ${stakedTON}`)
@@ -168,7 +168,7 @@ const updateCSV = async () => {
 
     // write the output
     fileName =
-      "data/upbit/upbit_burnedTON_column_K.csv";
+      "data/upbit/upbit_burnedTON_column_J.csv";
 
     header = "Block number, Burned TON"; // Add the header
     data = completeList
@@ -216,7 +216,7 @@ const updateCSV = async () => {
 
     // write the output
     fileName =
-      "data/upbit/upbit_lockedTON_column_W.csv";
+      "data/upbit/upbit_lockedTON+SpentTON_column_V+W.csv";
 
     header = "Block number, Locked TON, Spent TON"; // Add the header
     data = completeList
@@ -263,7 +263,7 @@ const updateCSV = async () => {
 
     // write the output
     fileName =
-      "data/upbit/upbit_burnedSeigTON_column_H.csv";
+      "data/upbit/upbit_burnedSeigTON_lockedWTON.csv";
 
     header = "Block number, Burned seignorage"; // Add the header
     data = completeList
@@ -306,7 +306,7 @@ const updateCSV = async () => {
 
     // write the output
     fileName =
-      "data/upbit/upbit_reducedSeigTON_column_I.csv";
+      "data/upbit/upbit_reducedSeigTON_column_H.csv";
 
       header = "Block number, Reduced seignorage"; // Add the header
       data = completeList.map(([blockNumber, reducedTON]) => `${blockNumber}, ${reducedTON}`).join("\n"); // Format the data
@@ -330,5 +330,5 @@ const updateCSV = async () => {
 };
 
 module.exports = {
-  updateCSV,
+  updateCSVUpbit,
 };
