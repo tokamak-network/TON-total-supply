@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "ethers": "^6.13.4",
+    "moralis": "^2.27.2"
+  },
+  "devDependencies": {
+    "alchemy-sdk": "^3.5.0"
+  }
+}
