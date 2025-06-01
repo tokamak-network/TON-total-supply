@@ -24,6 +24,7 @@ const { Alchemy, Network, Utils } = require("alchemy-sdk");
 require("dotenv").config();
 const Moralis = require("moralis").default;
 const fs = require("fs");
+const { getLogsWithRangeLimit } = require("./utils/blockRangeHelper");
 
 const config = {
   apiKey: process.env.ALCHEMY_API_KEY,
@@ -56,34 +57,38 @@ const burnedSeignorage = async (Block1, Block2) => {
   let patchedUnstakeLogs = [];
   if (startBlock < patchedStartBlock) {
     if (endBlock < patchedStartBlock) {
-      unstakeLogs = await alchemy.core.getLogs({
-        fromBlock: "0x" + startBlock.toString(16),
-        toBlock: "0x" + endBlock.toString(16),
-        address: seigManagerContractAddress,
-        topics: SEIGMANGER_UNSTAKED,
-      });
+      unstakeLogs = await getLogsWithRangeLimit(
+        alchemy,
+        startBlock,
+        endBlock,
+        seigManagerContractAddress,
+        SEIGMANGER_UNSTAKED
+      );
     } else {
       const patchedStartBlock_overlap = patchedStartBlock - 1;
-      unstakeLogs = await alchemy.core.getLogs({
-        fromBlock: "0x" + startBlock.toString(16),
-        toBlock: "0x" + patchedStartBlock_overlap.toString(16),
-        address: seigManagerContractAddress,
-        topics: SEIGMANGER_UNSTAKED,
-      });
-      patchedUnstakeLogs = await alchemy.core.getLogs({
-        fromBlock: "0x" + patchedStartBlock.toString(16),
-        toBlock: "0x" + endBlock.toString(16),
-        address: patchedSeigManagerProxyAddress,
-        topics: SEIGMANGER_UNSTAKED,
-      });
+      unstakeLogs = await getLogsWithRangeLimit(
+        alchemy,
+        startBlock,
+        patchedStartBlock_overlap,
+        seigManagerContractAddress,
+        SEIGMANGER_UNSTAKED
+      );
+      patchedUnstakeLogs = await getLogsWithRangeLimit(
+        alchemy,
+        patchedStartBlock,
+        endBlock,
+        patchedSeigManagerProxyAddress,
+        SEIGMANGER_UNSTAKED
+      );
     }
   } else {
-    unstakeLogs = await alchemy.core.getLogs({
-      fromBlock: "0x" + startBlock.toString(16),
-      toBlock: "0x" + endBlock.toString(16),
-      address: patchedSeigManagerProxyAddress,
-      topics: SEIGMANGER_UNSTAKED,
-    });
+    unstakeLogs = await getLogsWithRangeLimit(
+      alchemy,
+      startBlock,
+      endBlock,
+      patchedSeigManagerProxyAddress,
+      SEIGMANGER_UNSTAKED
+    );
   }
 
   // Seigmanager (old version)

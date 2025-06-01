@@ -11,6 +11,7 @@ const { Alchemy, Network, Utils, BigNumber } = require("alchemy-sdk");
 require("dotenv").config();
 const Moralis = require("moralis").default;
 const fs = require("fs");
+const { getLogsWithRangeLimit } = require("./utils/blockRangeHelper");
 
 const config = {
   apiKey: process.env.ALCHEMY_API_KEY,
@@ -31,15 +32,17 @@ const TON_CREATED_TOPICS = TON_INTERFACE.encodeFilterTopics(
 );
 
 var startBlock = Block1;
-const endBlock = Block2; 
+const endBlock = Block2;
 
-//alchemy
-const logs = await alchemy.core.getLogs({
-    fromBlock: "0x" + startBlock.toString(16),
-    toBlock: "0x" + endBlock.toString(16),
-    address: TONContractAddress,
-    topics: TON_CREATED_TOPICS,
-});
+//-- Use helper function to handle large block ranges (>500 blocks)
+//alchemy with range limit handling
+const logs = await getLogsWithRangeLimit(
+  alchemy,
+  startBlock,
+  endBlock,
+  TONContractAddress,
+  TON_CREATED_TOPICS
+);
 
 let logsLength = logs.length;
 let burned = 0;

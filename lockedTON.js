@@ -13,6 +13,7 @@ const { Alchemy, Network, Utils } = require("alchemy-sdk");
 require("dotenv").config();
 const Moralis = require("moralis").default;
 const fs = require("fs");
+const { getLogsWithRangeLimit } = require("./utils/blockRangeHelper");
 
 const config = {
   apiKey: process.env.ALCHEMY_API_KEY,
@@ -37,17 +38,18 @@ const lockedTON = async (Block1, Block2) => {
   );
 
   var startBlock = Block1;
-  const endBlock = Block2; 
+  const endBlock = Block2;
 
   //alchemy
 
-  //Locked TON on DAO vault
-  const lockedLogs = await alchemy.core.getLogs({
-    fromBlock: "0x" + startBlock.toString(16),
-    toBlock: "0x" + endBlock.toString(16),
-    address: TONContractAddress,
-    topics: TON_LOCKED_TOPICS,
-  });
+  //Locked TON on DAO vault - using range limit helper
+  const lockedLogs = await getLogsWithRangeLimit(
+    alchemy,
+    startBlock,
+    endBlock,
+    TONContractAddress,
+    TON_LOCKED_TOPICS
+  );
 
   let lockedLogsLength = lockedLogs.length;
   let locked = 0;
@@ -56,14 +58,15 @@ const lockedTON = async (Block1, Block2) => {
     lockedAmount = lockedLogs[i].data;
     locked = locked + parseInt(lockedAmount, 16);
   }
-    //Spent TON on DAO vault
-  const spentLogs = await alchemy.core.getLogs({
-      fromBlock: "0x" + startBlock.toString(16),
-      toBlock: "0x" + endBlock.toString(16),
-      address: TONContractAddress,
-      topics: TON_SPENT_TOPICS,
-  });
-  
+    //Spent TON on DAO vault - using range limit helper
+  const spentLogs = await getLogsWithRangeLimit(
+    alchemy,
+    startBlock,
+    endBlock,
+    TONContractAddress,
+    TON_SPENT_TOPICS
+  );
+
   let spentLogsLength = spentLogs.length;
   let spent = 0;
   for (let i = 0; i < spentLogsLength; i++) {
