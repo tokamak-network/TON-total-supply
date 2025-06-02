@@ -4,7 +4,7 @@
  * This utility splits large block ranges into smaller chunks and aggregates the results.
  */
 
-const MAX_BLOCK_RANGE = 499;
+const MAX_BLOCK_RANGE = 9999;
 
 /**
  * Split a large block range into smaller chunks to avoid API limits
