@@ -1,9 +1,9 @@
 # TON Network Comprehensive Analysis Report
 
 **Generated**: Based on May 31, 2025
-**Total Charts**: 4 Analysis Visualizations
-**Data Source**: August 2020 ~ May 2025 (4.72 years)
-**Time Range**: 2020-08-12 (Block 10,643,305) ~ 2025-05-31 (Block 22,597,793)
+
+**Target Time Range**: 2020-08-12 (Block 10,643,305) ~ 2025-05-31 (Block 22,597,793)
+
 **Analysis Basis**: On-chain data + [Tokamak Network Official Blog](https://medium.com/tokamak-network) verified information
 
 ---
