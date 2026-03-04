@@ -1,0 +1,102 @@
+{
+  "dashboard": "Tokamak Network Tokenomics Dashboard",
+  "url": "https://dune.com/tokamak-network/tokamak-network-tokenomics-dashboard",
+  "queries": [
+    {
+      "id": 3206902,
+      "name": "TON Current Price",
+      "type": "single_value",
+      "columns": ["price"]
+    },
+    {
+      "id": 3221097,
+      "name": "TON Total Supply",
+      "type": "single_value",
+      "columns": ["TON_Total_Supply"]
+    },
+    {
+      "id": 3298417,
+      "name": "Circulating Supply (excl. staking)",
+      "type": "single_value",
+      "columns": ["Circulating_Supply"]
+    },
+    {
+      "id": 3292797,
+      "name": "Circulating Supply (incl. staking)",
+      "type": "single_value",
+      "columns": ["Circulating_Supply"]
+    },
+    {
+      "id": 3298426,
+      "name": "Market Cap",
+      "type": "single_value",
+      "columns": ["market_cap"]
+    },
+    {
+      "id": 3298440,
+      "name": "Staking TVL",
+      "type": "single_value",
+      "columns": ["current_staked_ton", "current_ton_price_usd", "current_tvl_usd"]
+    },
+    {
+      "id": 3360297,
+      "name": "Top 10 TON Holders",
+      "type": "table",
+      "columns": ["address", "holder_name_or_address", "total_balance"]
+    },
+    {
+      "id": 6285706,
+      "name": "Tokenomics Daily Time Series (with price)",
+      "type": "time_series",
+      "columns": ["block_date", "token_price", "total_supply", "staked_amount", "dao_vault_balance", "circulating_supply", "circulating_supply_usd", "staking_ratio_percent"]
+    },
+    {
+      "id": 6285699,
+      "name": "Tokenomics Daily Time Series (without price)",
+      "type": "time_series",
+      "columns": ["block_date", "total_supply", "staked_amount", "dao_vault_balance", "circulating_supply", "staking_ratio_percent"]
+    },
+    {
+      "id": 6285921,
+      "name": "Seigniorage & Staking APY",
+      "type": "time_series",
+      "columns": ["evt_block_time", "total_staked_wton", "added_seigniorage", "apy_percent"]
+    },
+    {
+      "id": 6290964,
+      "name": "Upbit Exchange TON Flow",
+      "type": "time_series",
+      "columns": ["dt", "inflow_to_upbit", "outflow_from_upbit", "net_flow"]
+    },
+    {
+      "id": 6285964,
+      "name": "ASD vs VWASD (Avg Staking Duration)",
+      "type": "time_series",
+      "columns": ["dt", "VWASD", "ASD"]
+    },
+    {
+      "id": 6285976,
+      "name": "Exit VWASD with Price",
+      "type": "time_series",
+      "columns": ["dt", "Rolling_30d_VWASD", "Daily_Exit_Amount", "Daily_Specific_VWASD", "TON_Price_USD"]
+    },
+    {
+      "id": 6285988,
+      "name": "Exit VWASD without Price",
+      "type": "time_series",
+      "columns": ["dt", "Rolling_30d_VWASD", "Daily_Exit_Amount", "Daily_Specific_VWASD"]
+    },
+    {
+      "id": 6286264,
+      "name": "Exit Profit/Loss Analysis",
+      "type": "table",
+      "columns": ["exit_date", "Volume_In_Price_Profit", "Volume_In_Price_Loss", "Weighted_Avg_Price_Delta_Percent"]
+    },
+    {
+      "id": 6286271,
+      "name": "Individual Exit Details",
+      "type": "table",
+      "columns": ["exit_date", "hybrid_type", "address_link", "tx_link", "total_amount_display", "raw_amount_for_chart", "duration_days", "split_count"]
+    }
+  ]
+}
