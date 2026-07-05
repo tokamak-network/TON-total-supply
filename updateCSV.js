@@ -152,120 +152,101 @@ const updateCSV = async () => {
       newBlockNumberData.push([newTimestamps[i], response.raw.block]);
     }
 
-    // 📝 APPEND new block number data
-    if (newBlockNumberData.length > 0) {
-      appendToCSV(
-        "data/blockNumber_column_F.csv",
-        "Unix Epoch time, Block number",
-        newBlockNumberData
+    ///
+    /// 1. FETCH STAKED TON (only new block numbers)
+    ///
+    console.log("🔄 Processing new staked TON data...");
+    let newStakedTONData = [];
+
+    for (let i = 0; i < newBlockNumberList.length; i++) {
+      console.log("........................");
+      console.log(
+        "⚡ Alchemy API data retrieval:",
+        i + 1,
+        "/",
+        newBlockNumberList.length,
+        "(NEW staking data)"
       );
-      console.log(`✅ Added ${newBlockNumberData.length} new block numbers`);
-    }
-
-    // 🔍 GET ALL BLOCK NUMBERS for event-based data (needed for range queries)
-    let allBlockNumbers = [];
-    if (fs.existsSync("./data/blockNumber_column_F.csv")) {
-      const blockData = fs.readFileSync("./data/blockNumber_column_F.csv", "utf-8");
-      const lines = blockData.trim().split("\n").slice(1); // Skip header
-      allBlockNumbers = lines.map(line => parseInt(line.split(",")[1]));
+      const stakedAmount = await stakedTON.stakedTON(newBlockNumberList[i]);
+      newStakedTONData.push([newBlockNumberList[i], stakedAmount]);
     }
 
     ///
-    /// 1. UPDATE STAKED TON (only new block numbers)
-    ///
-    if (newBlockNumberList.length > 0) {
-      console.log("🔄 Processing new staked TON data...");
-      let newStakedTONData = [];
-
-      for (let i = 0; i < newBlockNumberList.length; i++) {
-        console.log("........................");
-        console.log(
-          "⚡ Alchemy API data retrieval:",
-          i + 1,
-          "/",
-          newBlockNumberList.length,
-          "(NEW staking data)"
-        );
-        const stakedAmount = await stakedTON.stakedTON(newBlockNumberList[i]);
-        newStakedTONData.push([newBlockNumberList[i], stakedAmount]);
-      }
-
-      appendToCSV(
-        "data/stakedTON_column_Y.csv",
-        "Block number, Staked (W)TON",
-        newStakedTONData
-      );
-      console.log(`✅ Added ${newStakedTONData.length} new staking records`);
-    }
-
-    ///
-    /// 2-5. UPDATE EVENT-BASED DATA (burned, locked, seignorage)
+    /// 2-5. FETCH EVENT-BASED DATA (burned, locked, seignorage)
     /// Only process new block ranges
     ///
-    if (newBlockNumberList.length > 0) {
-      console.log("🔄 Processing new event-based data...");
+    console.log("🔄 Processing new event-based data...");
 
-      // Get last processed block for events
-      const lastEventBlock = getLastBlockNumber("data/burnedTON_column_J.csv");
-      console.log(`📊 Last processed event block: ${lastEventBlock}`);
+    // Get last processed block for events
+    const lastEventBlock = getLastBlockNumber("data/burnedTON_column_J.csv");
+    console.log(`📊 Last processed event block: ${lastEventBlock}`);
 
-      // Create event block ranges - only new ones
-      let eventBlockRanges = [];
-      const startBlock = lastEventBlock || 10643261; // TON deployment block
+    // Create event block ranges - only new ones
+    let eventBlockRanges = [];
+    const startBlock = lastEventBlock || 10643261; // TON deployment block
 
-      for (let i = 0; i < newBlockNumberList.length; i++) {
-        eventBlockRanges.push({
-          startBlock: i === 0 ? startBlock : newBlockNumberList[i - 1],
-          endBlock: newBlockNumberList[i]
-        });
-      }
-
-      console.log(`🎯 Processing ${eventBlockRanges.length} new block ranges for events`);
-
-      let newBurnedTONData = [];
-      let newLockedTONData = [];
-      let newBurnedSeignorageData = [];
-      let newReducedSeignorageData = [];
-
-      for (let i = 0; i < eventBlockRanges.length; i++) {
-        const range = eventBlockRanges[i];
-        console.log(`🔥 Processing range ${i + 1}/${eventBlockRanges.length}: blocks ${range.startBlock + 1} to ${range.endBlock}`);
-
-        // Process all event types for this range
-        const [burnedAmount, [lockedAmount, spentAmount], burnedSeigAmount, reducedSeigAmount] = await Promise.all([
-          burnedTON.burnedTON(range.startBlock + 1, range.endBlock),
-          lockedTON.lockedTON(range.startBlock + 1, range.endBlock),
-          burnedSeignorage.burnedSeignorage(range.startBlock + 1, range.endBlock),
-          reducedSeignorage.reducedSeignorage(range.startBlock + 1, range.endBlock)
-        ]);
-
-        newBurnedTONData.push([range.endBlock, burnedAmount]);
-        newLockedTONData.push([range.endBlock, lockedAmount, spentAmount]);
-        newBurnedSeignorageData.push([range.endBlock, burnedSeigAmount]);
-        newReducedSeignorageData.push([range.endBlock, reducedSeigAmount]);
-      }
-
-      // Append all new event data
-      if (newBurnedTONData.length > 0) {
-        appendToCSV("data/burnedTON_column_J.csv", "Block number, Burned TON", newBurnedTONData);
-        console.log(`✅ Added ${newBurnedTONData.length} new burned TON records`);
-      }
-
-      if (newLockedTONData.length > 0) {
-        appendToCSV("data/lockedTON+spentTON_column_V+W.csv", "Block number, Locked TON, Spent TON", newLockedTONData);
-        console.log(`✅ Added ${newLockedTONData.length} new locked TON records`);
-      }
-
-      if (newBurnedSeignorageData.length > 0) {
-        appendToCSV("data/burnedSeigSWTON.csv", "Block number, Burned SWTON seignorage", newBurnedSeignorageData);
-        console.log(`✅ Added ${newBurnedSeignorageData.length} new burned seignorage records`);
-      }
-
-      if (newReducedSeignorageData.length > 0) {
-        appendToCSV("data/reducedSeigTON_column_H.csv", "Block number, Reduced seignorage", newReducedSeignorageData);
-        console.log(`✅ Added ${newReducedSeignorageData.length} new reduced seignorage records`);
-      }
+    for (let i = 0; i < newBlockNumberList.length; i++) {
+      eventBlockRanges.push({
+        startBlock: i === 0 ? startBlock : newBlockNumberList[i - 1],
+        endBlock: newBlockNumberList[i]
+      });
     }
+
+    console.log(`🎯 Processing ${eventBlockRanges.length} new block ranges for events`);
+
+    let newBurnedTONData = [];
+    let newLockedTONData = [];
+    let newBurnedSeignorageData = [];
+    let newReducedSeignorageData = [];
+
+    for (let i = 0; i < eventBlockRanges.length; i++) {
+      const range = eventBlockRanges[i];
+      console.log(`🔥 Processing range ${i + 1}/${eventBlockRanges.length}: blocks ${range.startBlock + 1} to ${range.endBlock}`);
+
+      // Process all event types for this range
+      const [burnedAmount, [lockedAmount, spentAmount], burnedSeigAmount, reducedSeigAmount] = await Promise.all([
+        burnedTON.burnedTON(range.startBlock + 1, range.endBlock),
+        lockedTON.lockedTON(range.startBlock + 1, range.endBlock),
+        burnedSeignorage.burnedSeignorage(range.startBlock + 1, range.endBlock),
+        reducedSeignorage.reducedSeignorage(range.startBlock + 1, range.endBlock)
+      ]);
+
+      newBurnedTONData.push([range.endBlock, burnedAmount]);
+      newLockedTONData.push([range.endBlock, lockedAmount, spentAmount]);
+      newBurnedSeignorageData.push([range.endBlock, burnedSeigAmount]);
+      newReducedSeignorageData.push([range.endBlock, reducedSeigAmount]);
+    }
+
+    ///
+    /// 📝 APPEND ALL DATA
+    /// Writes happen only after every fetch above succeeded, so a failed run
+    /// never leaves the CSV files out of sync with each other.
+    ///
+    appendToCSV(
+      "data/blockNumber_column_F.csv",
+      "Unix Epoch time, Block number",
+      newBlockNumberData
+    );
+    console.log(`✅ Added ${newBlockNumberData.length} new block numbers`);
+
+    appendToCSV(
+      "data/stakedTON_column_Y.csv",
+      "Block number, Staked (W)TON",
+      newStakedTONData
+    );
+    console.log(`✅ Added ${newStakedTONData.length} new staking records`);
+
+    appendToCSV("data/burnedTON_column_J.csv", "Block number, Burned TON", newBurnedTONData);
+    console.log(`✅ Added ${newBurnedTONData.length} new burned TON records`);
+
+    appendToCSV("data/lockedTON+spentTON_column_V+W.csv", "Block number, Locked TON, Spent TON", newLockedTONData);
+    console.log(`✅ Added ${newLockedTONData.length} new locked TON records`);
+
+    appendToCSV("data/burnedSeigSWTON.csv", "Block number, Burned SWTON seignorage", newBurnedSeignorageData);
+    console.log(`✅ Added ${newBurnedSeignorageData.length} new burned seignorage records`);
+
+    appendToCSV("data/reducedSeigTON_column_H.csv", "Block number, Reduced seignorage", newReducedSeignorageData);
+    console.log(`✅ Added ${newReducedSeignorageData.length} new reduced seignorage records`);
 
     // Current status
     let currentStakedTON = await stakedTON.stakedTON(lastBlockNumber);
