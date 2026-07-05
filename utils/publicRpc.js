@@ -47,12 +47,16 @@ async function getLogsViaPublicRpc(startBlock, endBlock, contractAddress, topics
         ...PUBLIC_RPC_ENDPOINTS,
       ]
     : PUBLIC_RPC_ENDPOINTS;
+  // Drop duplicates (e.g. GETLOGS_RPC_URL matching a default) before ordering
+  const unique = configured.filter(
+    (endpoint, i) => configured.findIndex((e) => e.url === endpoint.url) === i
+  );
   const endpoints = lastGoodUrl
     ? [
-        ...configured.filter((endpoint) => endpoint.url === lastGoodUrl),
-        ...configured.filter((endpoint) => endpoint.url !== lastGoodUrl),
+        ...unique.filter((endpoint) => endpoint.url === lastGoodUrl),
+        ...unique.filter((endpoint) => endpoint.url !== lastGoodUrl),
       ]
-    : configured;
+    : unique;
 
   let lastError;
   for (const endpoint of endpoints) {
