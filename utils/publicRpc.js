@@ -3,15 +3,17 @@
  * Alchemy's free tier limits eth_getLogs to a 10-block range, so log queries
  * are sent to public endpoints that accept unbounded block ranges instead.
  * Endpoints are tried in order until one succeeds; set the GETLOGS_RPC_URL
- * environment variable to try a custom endpoint first.
+ * environment variable to try a custom endpoint first (with an optional
+ * GETLOGS_RPC_MAX_RANGE if that endpoint caps the block span per request).
  */
 const { ethers } = require("ethers");
 require("dotenv").config();
 
+// maxBlockRange caps the block span per getLogs request for endpoints that
+// reject large ranges; omit it for endpoints verified to accept unbounded ones.
 const PUBLIC_RPC_ENDPOINTS = [
-  "https://rpc.mevblocker.io",
-  "https://eth.llamarpc.com",
-  "https://ethereum.blockpi.network/v1/rpc/public",
+  { url: "https://rpc.mevblocker.io" },
+  { url: "https://gateway.tenderly.co/public/mainnet" },
 ];
 
 // One provider per endpoint, shared across calls
@@ -37,26 +39,43 @@ let lastGoodUrl = null;
  */
 async function getLogsViaPublicRpc(startBlock, endBlock, contractAddress, topics) {
   const configured = process.env.GETLOGS_RPC_URL
-    ? [process.env.GETLOGS_RPC_URL, ...PUBLIC_RPC_ENDPOINTS]
+    ? [
+        {
+          url: process.env.GETLOGS_RPC_URL,
+          maxBlockRange: Number(process.env.GETLOGS_RPC_MAX_RANGE) || undefined,
+        },
+        ...PUBLIC_RPC_ENDPOINTS,
+      ]
     : PUBLIC_RPC_ENDPOINTS;
   const endpoints = lastGoodUrl
-    ? [lastGoodUrl, ...configured.filter((url) => url !== lastGoodUrl)]
+    ? [
+        ...configured.filter((endpoint) => endpoint.url === lastGoodUrl),
+        ...configured.filter((endpoint) => endpoint.url !== lastGoodUrl),
+      ]
     : configured;
 
   let lastError;
-  for (const url of endpoints) {
+  for (const endpoint of endpoints) {
     try {
-      const logs = await getProvider(url).getLogs({
-        fromBlock: startBlock,
-        toBlock: endBlock,
-        address: contractAddress,
-        topics: topics,
-      });
-      console.log(`Retrieved ${logs.length} logs for blocks ${startBlock}-${endBlock} via ${url}`);
-      lastGoodUrl = url;
+      const provider = getProvider(endpoint.url);
+      const step = endpoint.maxBlockRange || endBlock - startBlock + 1;
+      const logs = [];
+      for (let from = startBlock; from <= endBlock; from += step) {
+        const to = Math.min(from + step - 1, endBlock);
+        logs.push(
+          ...(await provider.getLogs({
+            fromBlock: from,
+            toBlock: to,
+            address: contractAddress,
+            topics: topics,
+          }))
+        );
+      }
+      console.log(`Retrieved ${logs.length} logs for blocks ${startBlock}-${endBlock} via ${endpoint.url}`);
+      lastGoodUrl = endpoint.url;
       return logs;
     } catch (error) {
-      console.error(`getLogs failed on ${url} (blocks ${startBlock}-${endBlock}): ${error.message}`);
+      console.error(`getLogs failed on ${endpoint.url} (blocks ${startBlock}-${endBlock}): ${error.message}`);
       lastError = error;
     }
   }
