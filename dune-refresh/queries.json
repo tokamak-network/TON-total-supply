@@ -1,0 +1,21 @@
+{
+  "$schema_note": "Dune queries referenced by each visualization on the Tokamak tokenomics dashboard. To find a query ID, open a chart's ··· menu -> 'View query' and read the ID from the URL (dune.com/queries/<ID>/...). When a new chart is added, add one line here. IDs must be unique; a single execution per query refreshes every visualization of that query on the dashboard.",
+  "queries": [
+    { "id": 3360297, "name": "The Big Players of TON+WTON: Leading 10 Wallets" },
+    { "id": 3206902, "name": "TON Price" },
+    { "id": 3221097, "name": "Total Supply" },
+    { "id": 3298440, "name": "Total Staked TON" },
+    { "id": 3298426, "name": "Market Cap (Upper Estimate)" },
+    { "id": 3298417, "name": "Circulating Supply (Upper Estimate)" },
+    { "id": 3292797, "name": "Circulating Supply (Upbit Standard: staked TON counted as circulating)" },
+    { "id": 6285706, "name": "TON Circulating Market Cap (USD) vs Staked Amount (TON)" },
+    { "id": 6285699, "name": "TON Circulating Supply & Staking Ratio (Token Count)" },
+    { "id": 6285921, "name": "Staking Dynamics: Staking Yield (APY) vs. Total Staked Volume" },
+    { "id": 6290964, "name": "Upbit Cold Wallet Inflow/Outflow" },
+    { "id": 6285976, "name": "Staking Dynamics: Exit Duration vs. Price Correlation" },
+    { "id": 6285964, "name": "Staking Exit Dynamics: Withdrawal Duration Trends" },
+    { "id": 6285988, "name": "Staking Dynamics: Whale Exit Detector (Volume vs. Duration)" },
+    { "id": 6286264, "name": "Staking Dynamics: Whale Exit Sentiment (Price PnL)" },
+    { "id": 6286271, "name": "Staking Dynamics: Whale Exit Profiler (Who is Unstaking?)" }
+  ]
+}

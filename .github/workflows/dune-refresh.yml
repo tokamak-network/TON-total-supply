@@ -1,0 +1,35 @@
+name: Dune daily refresh
+
+# Tokamak tokenomics 대시보드의 Dune 쿼리들을 매일 재실행하여 최신 상태로 유지한다.
+# 실행할 쿼리 목록은 dune-refresh/queries.json 에서 관리한다.
+
+on:
+  schedule:
+    # 매일 22:50 UTC (= 다음날 07:50 KST). CoinGecko/Upbit 등 외부 집계처가 오전 9시(KST)
+    # 경 대시보드를 참조하기 전에 데이터가 갱신돼 있도록 9시 이전으로 당겨 실행한다.
+    # 분(minute)을 0 이 아닌 값으로 두는 것이 GitHub 권장사항(정각엔 실행이 몰려 지연될 수 있음).
+    - cron: "50 22 * * *"
+  workflow_dispatch: {} # Actions 탭에서 수동 실행도 가능
+
+# 중복 실행 방지
+concurrency:
+  group: dune-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Refresh Dune queries
+        env:
+          # 저장소 Settings → Secrets and variables → Actions 에 등록 필요.
+          # DUNE_API_KEY 만 등록해도 스크립트가 폴백으로 사용한다.
+          DUNE_EXECUTE_API_KEY: ${{ secrets.DUNE_EXECUTE_API_KEY }}
+          DUNE_API_KEY: ${{ secrets.DUNE_API_KEY }}
+        run: node dune-refresh/refresh.js --wait
