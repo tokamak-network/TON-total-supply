@@ -17,6 +17,12 @@ This repository contains JavaScript files related to the TON (Tokamak Network) t
 
 The `data` folder contains outputs from the `main.js` file. These files are used to update the TON supply spreadsheet, which can be found [here](https://docs.google.com/spreadsheets/d/1-4dT3nS4q7RwLgGI6rQ7M1hPx9XHI-Ryw1rkBCvTdcs/edit?usp=sharing).
 
+## Dune dashboard daily refresh (`dune-refresh/`)
+
+The [`dune-refresh/`](./dune-refresh) folder holds a small tool that re-runs the Dune queries behind the [Tokamak Network Tokenomics dashboard](https://dune.com/tokamak-network/tokamak-network-tokenomics-dashboard) once a day, so the dashboard stays up to date automatically. It runs via a GitHub Actions cron (daily at 07:50 KST) or a server crontab, and it fits within Dune's free credit tier.
+
+See [`dune-refresh/README.md`](./dune-refresh/README.md) for setup, the query list, API-key handling, and cost details.
+
 ## Usage
 
 To use this project, follow these steps:
