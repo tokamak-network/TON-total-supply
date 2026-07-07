@@ -27,7 +27,7 @@ that each chart references. How to find a query ID:
 {
   "queries": [
     { "id": 3360297, "name": "The Big Players of TON+WTON: Leading 10 Wallets" },
-    { "id": 0000000, "name": "add the remaining chart queries here" }
+    { "id": 1234567, "name": "add the remaining chart queries here" }
   ]
 }
 ```
@@ -87,11 +87,13 @@ crontab -e
 
 ```cron
 # Refresh the Dune dashboard daily at 07:50 (when the server's local TZ is KST)
-50 7 * * *  cd /path/to/TON-total-supply && /usr/bin/node dune-refresh/refresh.js --wait >> /var/log/dune-refresh.log 2>&1
+50 7 * * *  /usr/bin/node /path/to/TON-total-supply/dune-refresh/refresh.js --wait >> $HOME/dune-refresh.log 2>&1
 ```
 
-- `cd` into the project root so `.env` and `queries.json` are found.
-- Use an absolute `node` path (`which node`).
+- The script resolves `.env` and `queries.json` relative to its own location
+  (`__dirname`), so the working directory doesn't matter — no `cd` needed.
+- Use an absolute `node` path (`which node`) and an absolute path to the script.
+- Log to a path your cron user can write (e.g. `$HOME/…`); `/var/log/` usually needs root.
 
 ## Run manually / verify
 
