@@ -12,6 +12,7 @@
  * 환경변수:
  *   DUNE_EXECUTE_API_KEY  (없으면 DUNE_API_KEY 로 폴백) — 쿼리 실행 권한이 있는 API 키
  *   DUNE_PERFORMANCE      "medium" | "large" (기본 medium) — 실행 엔진 티어
+ *   DUNE_CONCURRENCY      동시에 실행하는 쿼리 수 (기본 4). 높이면 rate limit 위험
  *   DUNE_WAIT_TIMEOUT_MS  --wait 시 쿼리당 최대 대기 시간 (기본 600000 = 10분)
  */
 
@@ -31,6 +32,10 @@ const PERFORMANCE = process.env.DUNE_PERFORMANCE || "medium";
 const WAIT = process.argv.includes("--wait");
 const WAIT_TIMEOUT_MS = Number(process.env.DUNE_WAIT_TIMEOUT_MS) || 10 * 60 * 1000;
 const POLL_INTERVAL_MS = 5000;
+// 한 번에 동시에 실행하는 쿼리 수. 너무 크면 Dune rate limit(429)에 걸린다.
+const CONCURRENCY = Number(process.env.DUNE_CONCURRENCY) || 3;
+const MAX_RETRIES = 5; // 429 재시도 횟수
+const RETRY_BASE_MS = 2000;
 
 const TERMINAL_STATES = new Set([
   "QUERY_STATE_COMPLETED",
@@ -51,22 +56,47 @@ function loadQueries() {
   return queries;
 }
 
+// 제한된 동시성으로 items 를 처리하고 결과를 원래 순서대로 반환한다.
+async function mapLimit(items, limit, fn) {
+  const results = new Array(items.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const idx = next++;
+      results[idx] = await fn(items[idx], idx);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return results;
+}
+
 async function duneFetch(url, options = {}) {
-  const res = await fetch(url, {
-    ...options,
-    headers: { "X-Dune-API-Key": API_KEY, ...(options.headers || {}) },
-  });
-  const text = await res.text();
-  let body;
-  try {
-    body = text ? JSON.parse(text) : {};
-  } catch (_) {
-    body = { raw: text };
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(url, {
+      ...options,
+      headers: { "X-Dune-API-Key": API_KEY, ...(options.headers || {}) },
+    });
+
+    // rate limit: Retry-After 헤더(초) 또는 지수 백오프로 재시도
+    if (res.status === 429 && attempt < MAX_RETRIES) {
+      const retryAfter = Number(res.headers.get("retry-after"));
+      const backoff = retryAfter > 0 ? retryAfter * 1000 : RETRY_BASE_MS * 2 ** attempt;
+      await sleep(backoff);
+      continue;
+    }
+
+    const text = await res.text();
+    let body;
+    try {
+      body = text ? JSON.parse(text) : {};
+    } catch (_) {
+      body = { raw: text };
+    }
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status} ${body.error || text || res.statusText}`);
+    }
+    return body;
   }
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status} ${body.error || text || res.statusText}`);
-  }
-  return body;
 }
 
 async function execute(query) {
@@ -113,8 +143,9 @@ async function main() {
   const queries = loadQueries();
   console.log(`▶ ${queries.length}개 쿼리 새로고침 시작 (performance=${PERFORMANCE}, wait=${WAIT})`);
 
-  // 쿼리들은 서로 독립적이므로 동시에 실행/폴링한다 (--wait 시 총 대기시간 = 합 → 최댓값).
-  const results = await Promise.all(queries.map(refreshQuery));
+  // 쿼리들은 서로 독립적이므로 제한된 동시성으로 실행/폴링한다
+  // (--wait 시 총 대기시간을 줄이면서 rate limit 은 피한다).
+  const results = await mapLimit(queries, CONCURRENCY, refreshQuery);
 
   let failed = 0;
   for (const { ok, line } of results) {

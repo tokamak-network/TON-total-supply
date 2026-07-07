@@ -5,9 +5,10 @@ name: Dune daily refresh
 
 on:
   schedule:
-    # 매일 00:20 UTC (= 09:20 KST). 분(minute)을 0 이 아닌 값으로 두는 것이 GitHub 권장사항
-    # (정각에는 실행이 몰려 지연될 수 있음).
-    - cron: "20 0 * * *"
+    # 매일 22:50 UTC (= 다음날 07:50 KST). CoinGecko/Upbit 등 외부 집계처가 오전 9시(KST)
+    # 경 대시보드를 참조하기 전에 데이터가 갱신돼 있도록 9시 이전으로 당겨 실행한다.
+    # 분(minute)을 0 이 아닌 값으로 두는 것이 GitHub 권장사항(정각엔 실행이 몰려 지연될 수 있음).
+    - cron: "50 22 * * *"
   workflow_dispatch: {} # Actions 탭에서 수동 실행도 가능
 
 # 중복 실행 방지

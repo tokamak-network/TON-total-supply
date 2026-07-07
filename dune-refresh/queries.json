@@ -1,6 +1,21 @@
 {
-  "$schema_note": "Tokamak tokenomics 대시보드의 각 시각화가 참조하는 Dune 쿼리 목록. 대시보드에서 차트 우측 상단 ··· → 'View query' 를 열면 URL(dune.com/queries/<ID>/...)에서 ID를 확인할 수 있습니다. 새 차트가 추가되면 여기에 한 줄만 넣으면 됩니다.",
+  "$schema_note": "Tokamak tokenomics 대시보드의 각 시각화가 참조하는 Dune 쿼리 목록. 대시보드에서 차트 우측 상단 ··· → 'View query' 를 열면 URL(dune.com/queries/<ID>/...)에서 ID를 확인할 수 있습니다. 새 차트가 추가되면 여기에 한 줄만 넣으면 됩니다. id 는 고유해야 하며, 같은 쿼리의 시각화가 여러 개여도 쿼리 1회 실행이면 대시보드 전체가 갱신됩니다.",
   "queries": [
-    { "id": 3360297, "name": "The Big Players of TON+WTON: Leading 10 Wallets" }
+    { "id": 3360297, "name": "The Big Players of TON+WTON: Leading 10 Wallets" },
+    { "id": 3206902, "name": "TON Price" },
+    { "id": 3221097, "name": "Total Supply" },
+    { "id": 3298440, "name": "Total Staked TON" },
+    { "id": 3298426, "name": "Market Cap (Upper Estimate)" },
+    { "id": 3298417, "name": "Circulating Supply (Upper Estimate)" },
+    { "id": 3292797, "name": "Circulating Supply (Upbit Standard: staked TON counted as circulating)" },
+    { "id": 6285706, "name": "TON Circulating Market Cap (USD) vs Staked Amount (TON)" },
+    { "id": 6285699, "name": "TON Circulating Supply & Staking Ratio (Token Count)" },
+    { "id": 6285921, "name": "Staking Dynamics: Staking Yield (APY) vs. Total Staked Volume" },
+    { "id": 6290964, "name": "Upbit Cold Wallet Inflow/Outflow" },
+    { "id": 6285976, "name": "Staking Dynamics: Exit Duration vs. Price Correlation" },
+    { "id": 6285964, "name": "Staking Exit Dynamics: Withdrawal Duration Trends" },
+    { "id": 6285988, "name": "Staking Dynamics: Whale Exit Detector (Volume vs. Duration)" },
+    { "id": 6286264, "name": "Staking Dynamics: Whale Exit Sentiment (Price PnL)" },
+    { "id": 6286271, "name": "Staking Dynamics: Whale Exit Profiler (Who is Unstaking?)" }
   ]
 }

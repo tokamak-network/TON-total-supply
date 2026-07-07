@@ -43,7 +43,8 @@ Dune 대시보드는 각 쿼리의 **최신 실행 결과**를 표시합니다. 
 
 ## 3-A. GitHub Actions 로 실행 (추천)
 
-`../.github/workflows/dune-refresh.yml` 이 매일 **00:20 UTC (09:20 KST)** 에 자동 실행합니다.
+`../.github/workflows/dune-refresh.yml` 이 매일 **22:50 UTC (= 다음날 07:50 KST)** 에 자동 실행합니다.
+CoinGecko/Upbit 등 외부 집계처가 오전 9시(KST)경 참조하기 전에 데이터가 갱신돼 있도록 9시 이전으로 잡았습니다.
 설정할 것은 위 2번의 Secret 등록뿐입니다.
 
 - 실행 시각 변경: 워크플로우의 `cron` 값 수정 ([crontab.guru](https://crontab.guru) 참고, **UTC 기준**)
@@ -57,8 +58,8 @@ crontab -e
 ```
 
 ```cron
-# 매일 09:20 (서버 로컬 타임존) Dune 대시보드 새로고침
-20 9 * * *  cd /path/to/TON-total-supply && /usr/bin/node dune-refresh/refresh.js --wait >> /var/log/dune-refresh.log 2>&1
+# 매일 07:50 (서버 로컬 타임존이 KST일 때) Dune 대시보드 새로고침
+50 7 * * *  cd /path/to/TON-total-supply && /usr/bin/node dune-refresh/refresh.js --wait >> /var/log/dune-refresh.log 2>&1
 ```
 
 - `cd` 로 프로젝트 루트에 들어가야 `.env` 와 `queries.json` 을 찾습니다.
@@ -79,7 +80,22 @@ node dune-refresh/refresh.js --wait
 | 변수 | 기본값 | 설명 |
 |---|---|---|
 | `DUNE_PERFORMANCE` | `medium` | 실행 엔진 티어 (`medium` / `large`). `large` 는 더 빠르지만 크레딧을 더 씁니다. |
+| `DUNE_CONCURRENCY` | `3` | 동시에 실행하는 쿼리 수. 항상 최대 이 개수만큼만 진행하고, 하나가 끝나면 다음 쿼리가 빈 슬롯으로 들어갑니다(슬라이딩 풀). 높이면 rate limit(429) 위험 — 그래도 429 는 자동 재시도합니다. `1` 로 주면 완전 순차 실행. |
 | `DUNE_WAIT_TIMEOUT_MS` | `600000` | `--wait` 시 쿼리당 최대 대기 시간(ms) |
+
+## 비용 (Dune 크레딧)
+
+`medium` 엔진 기준 실측(2026-07):
+
+| 항목 | 크레딧 |
+|---|---|
+| 1회(16개 쿼리) 전체 실행 | 약 **54.3** |
+| 매일 1회 × 30일 | 약 **1,630 / 월** |
+
+- **Free 플랜(월 2,500 credits, API 포함)으로 충분합니다.** 현재 사용률 약 65%.
+- 가장 비싼 쿼리는 `The Big Players…`(#3360297) 하나로 **~24 credits (일일 비용의 44%)** — 전체 transfer 이력을 스캔하기 때문. 향후 크레딧이 부족해지면 이 쿼리부터 최적화(스캔 범위 제한 등)하면 효과가 큽니다.
+- 온체인 이력이 늘수록 쿼리당 크레딧도 서서히 증가하므로 여유분(월 ~870 credits)은 모니터링 권장. 초과분은 $5/100 credits(= $0.05/credit)로 과금됩니다.
+- 참고: 앞서 겪은 429 는 크레딧 소진이 아니라 **요청 rate limit** 입니다. Free 플랜은 rate limit 이 낮으므로 `DUNE_CONCURRENCY` 를 낮게(기본 3) 유지하는 것이 안전합니다.
 
 ## 참고
 
