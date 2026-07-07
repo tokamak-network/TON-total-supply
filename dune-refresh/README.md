@@ -1,148 +1,166 @@
-# Dune 대시보드 일일 자동 새로고침
+# Dune dashboard daily refresh
 
-[Tokamak Network Tokenomics 대시보드](https://dune.com/tokamak-network/tokamak-network-tokenomics-dashboard)를
-구성하는 Dune 쿼리들을 **매일 자동으로 재실행(refresh)** 하는 도구입니다.
+A small tool that **re-runs (refreshes) the Dune queries** behind the
+[Tokamak Network Tokenomics dashboard](https://dune.com/tokamak-network/tokamak-network-tokenomics-dashboard)
+once a day.
 
-Dune 대시보드는 각 쿼리의 **최신 실행 결과**를 표시합니다. 따라서 매일 쿼리를 실행해두면
-대시보드가 사람 손 없이 항상 최신 상태로 유지됩니다.
+A Dune dashboard renders each query's **latest execution result**. So re-executing
+the queries every day keeps the dashboard up to date with no manual work.
 
-## 구성
+## Layout
 
-| 파일 | 역할 |
+| File | Purpose |
 |---|---|
-| `refresh.js` | `queries.json` 의 각 쿼리를 Dune execute API 로 재실행 |
-| `queries.json` | 새로고침할 쿼리 ID 목록 |
-| `../.github/workflows/dune-refresh.yml` | 매일 자동 실행하는 GitHub Actions 워크플로우 |
+| `refresh.js` | Re-executes each query in `queries.json` via the Dune execute API |
+| `queries.json` | List of query IDs to refresh |
+| `../.github/workflows/dune-refresh.yml` | GitHub Actions workflow that runs it daily |
 
-## 1. 새로고침할 쿼리 등록 (`queries.json`)
+## 1. Register the queries to refresh (`queries.json`)
 
-대시보드의 **모든 차트가 자동으로 갱신되려면**, 각 차트가 참조하는 쿼리 ID를 모두 넣어야 합니다.
-쿼리 ID 찾는 법:
+For **every chart on the dashboard to update automatically**, add the query ID
+that each chart references. How to find a query ID:
 
-1. 대시보드에서 차트 우측 상단 `···` → **View query** 클릭
-2. 열린 URL의 숫자가 쿼리 ID: `dune.com/queries/`**`3360297`**`/...`
+1. On the dashboard, click `···` at the top-right of a chart → **View query**
+2. The number in the opened URL is the query ID: `dune.com/queries/`**`3360297`**`/...`
 
 ```json
 {
   "queries": [
     { "id": 3360297, "name": "The Big Players of TON+WTON: Leading 10 Wallets" },
-    { "id": 0000000, "name": "여기에 나머지 차트 쿼리 추가" }
+    { "id": 0000000, "name": "add the remaining chart queries here" }
   ]
 }
 ```
 
-> `name` 은 로그 가독성용이며 없어도 됩니다.
+> `name` is only for log readability and is optional.
 
-## 2. API 키
+## 2. API key
 
-쿼리 실행 권한이 있는 Dune API 키가 필요합니다. 스크립트는
-`DUNE_EXECUTE_API_KEY` 를 우선 사용하고, 없으면 `DUNE_API_KEY` 로 폴백합니다.
+A Dune API key with query-execution permission is required. The script uses
+`DUNE_EXECUTE_API_KEY` first, falling back to `DUNE_API_KEY`.
 
-- **로컬/서버 cron**: 프로젝트 루트 `.env` 에 이미 있는 키를 그대로 사용
-- **GitHub Actions**: 저장소 **Settings → Secrets and variables → Actions** 에 `DUNE_EXECUTE_API_KEY`(또는 `DUNE_API_KEY`) 등록
+- **Local / server cron**: uses the key already present in the project-root `.env`
+- **GitHub Actions**: register `DUNE_EXECUTE_API_KEY` (or `DUNE_API_KEY`) under the
+  repo's **Settings → Secrets and variables → Actions**
 
-### 키 발급 위치
+### Where to issue a key
 
-- 팀 워크스페이스: **Dune → workspace → tokamak-network → APIs**
+- Team workspace: **Dune → workspace → tokamak-network → APIs**
   (<https://dune.com/workspace/t/tokamak-network/apis>)
-- 개인 계정: **Settings → API** (<https://dune.com/settings/api>)
-- **Create API key** → 이름 지정 → 생성 직후 **한 번만** 전체 값이 표시되므로 그때 복사. (Free 플랜도 API 키 발급 가능)
+- Personal account: **Settings → API** (<https://dune.com/settings/api>)
+- **Create API key** → name it → the full value is shown **only once** on creation,
+  so copy it then. (Free plan can issue API keys too.)
 
-### 한도 소진 시 다른 계정 키로 교체
+### Swapping to another account's key when the quota runs out
 
-크레딧은 **키를 발급한 계정** 기준으로 차감됩니다. 한 계정의 월 한도가 차면
-**다른 계정에서 발급한 키로 값만 바꾸면** 코드 수정 없이 그 계정의 크레딧으로 계속 실행됩니다.
+Credits are charged to the **account that issued the key**. When one account's
+monthly quota is exhausted, just **replace the key value with one from another
+account** — no code change needed, and it keeps running on that account's credits.
 
-교체 대상은 **실제 실행하는 환경 한 곳만** 바꾸면 됩니다:
+Change only the **one environment you actually run in**:
 
-| 실행 방식 | 바꿀 곳 |
+| Run mode | Where to change |
 |---|---|
-| GitHub Actions | 저장소 **Settings → Secrets and variables → Actions** 에서 `DUNE_EXECUTE_API_KEY`(및 `DUNE_API_KEY`) **Update** (또는 CLI: `printf '%s' "새키" \| gh secret set DUNE_EXECUTE_API_KEY`) |
-| 로컬/서버 cron | 프로젝트 루트 `.env` 의 `DUNE_EXECUTE_API_KEY` 값 교체 |
+| GitHub Actions | **Settings → Secrets and variables → Actions**, **Update** `DUNE_EXECUTE_API_KEY` (and `DUNE_API_KEY`). Or via CLI: `printf '%s' "NEW_KEY" \| gh secret set DUNE_EXECUTE_API_KEY` |
+| Local / server cron | Replace `DUNE_EXECUTE_API_KEY` in the project-root `.env` |
 
-> 코드/`queries.json` 은 건드릴 필요 없습니다. 키 값만 교체하면 됩니다.
+> No need to touch the code or `queries.json` — only the key value changes.
 
-## 3-A. GitHub Actions 로 실행 (추천)
+## 3-A. Run via GitHub Actions (recommended)
 
-`../.github/workflows/dune-refresh.yml` 이 매일 **22:50 UTC (= 다음날 07:50 KST)** 에 자동 실행합니다.
-CoinGecko/Upbit 등 외부 집계처가 오전 9시(KST)경 참조하기 전에 데이터가 갱신돼 있도록 9시 이전으로 잡았습니다.
-설정할 것은 위 2번의 Secret 등록뿐입니다.
+`../.github/workflows/dune-refresh.yml` runs daily at **22:50 UTC (= 07:50 KST next day)**.
+It's scheduled before 09:00 KST so the data is fresh before external aggregators
+(CoinGecko/Upbit) read the dashboard around that time. The only setup is registering
+the Secret from step 2.
 
-- 실행 시각 변경: 워크플로우의 `cron` 값 수정 ([crontab.guru](https://crontab.guru) 참고, **UTC 기준**)
-- 수동 실행/테스트: 저장소 **Actions 탭 → Dune daily refresh → Run workflow**
-- 비용: public repo 무제한 무료 / private repo 도 하루 ~1분이라 무료 범위. 단, 쿼리 실행 자체는 Dune 크레딧을 소모합니다(실행 장소와 무관).
+- Change the run time: edit the workflow's `cron` value ([crontab.guru](https://crontab.guru), **UTC**)
+- Manual run / test: repo **Actions tab → Dune daily refresh → Run workflow**
+- Cost: unlimited free on public repos; even on private repos it's ~1 min/day, within
+  the free tier. Note the query executions themselves consume Dune credits (regardless
+  of where the job runs).
 
-## 3-B. 서버 crontab 으로 실행
+## 3-B. Run via server crontab
 
 ```bash
 crontab -e
 ```
 
 ```cron
-# 매일 07:50 (서버 로컬 타임존이 KST일 때) Dune 대시보드 새로고침
+# Refresh the Dune dashboard daily at 07:50 (when the server's local TZ is KST)
 50 7 * * *  cd /path/to/TON-total-supply && /usr/bin/node dune-refresh/refresh.js --wait >> /var/log/dune-refresh.log 2>&1
 ```
 
-- `cd` 로 프로젝트 루트에 들어가야 `.env` 와 `queries.json` 을 찾습니다.
-- `node` 경로는 `which node` 로 확인해 절대경로로 넣으세요.
+- `cd` into the project root so `.env` and `queries.json` are found.
+- Use an absolute `node` path (`which node`).
 
-## 수동 실행 / 동작 확인
+## Run manually / verify
 
 ```bash
-# 실행만 트리거 (빠름, fire-and-forget)
+# Trigger executions only (fast, fire-and-forget)
 node dune-refresh/refresh.js
 
-# 실행 완료까지 폴링하여 성공/실패를 로그로 확인 (Actions/cron 권장)
+# Poll each execution to completion and report success/failure (recommended for Actions/cron)
 node dune-refresh/refresh.js --wait
 ```
 
-## 환경변수 (선택)
+## Environment variables (optional)
 
-| 변수 | 기본값 | 설명 |
+| Variable | Default | Description |
 |---|---|---|
-| `DUNE_PERFORMANCE` | `medium` | 실행 엔진 티어 (`medium` / `large`). `large` 는 더 빠르지만 크레딧을 더 씁니다. |
-| `DUNE_CONCURRENCY` | `3` | 동시에 실행하는 쿼리 수. 항상 최대 이 개수만큼만 진행하고, 하나가 끝나면 다음 쿼리가 빈 슬롯으로 들어갑니다(슬라이딩 풀). **Dune Free 플랜은 동시 쿼리 최대 3개** 제한이라 기본값 3 이 딱 맞습니다. 넘기면 rate limit(429) — 그래도 429 는 자동 재시도합니다. `1` 로 주면 완전 순차 실행. |
-| `DUNE_WAIT_TIMEOUT_MS` | `600000` | `--wait` 시 쿼리당 최대 대기 시간(ms) |
+| `DUNE_PERFORMANCE` | `medium` | Execution engine tier (`medium` / `large`). `large` is faster but costs more credits. |
+| `DUNE_CONCURRENCY` | `3` | Number of queries run at once. At most this many run concurrently, and as soon as one finishes the next takes its slot (sliding pool). **Dune's Free plan caps concurrent queries at 3**, so the default of 3 fits exactly. Going higher risks rate limiting (429) — though 429s are retried automatically. Set to `1` for fully sequential runs. |
+| `DUNE_WAIT_TIMEOUT_MS` | `600000` | Max wait per query in `--wait` mode (ms) |
 
-## 비용 (Dune 크레딧)
+## Cost (Dune credits)
 
-`medium` 엔진 기준 실측(2026-07):
+Measured on the `medium` engine (2026-07):
 
-| 항목 | 크레딧 |
+| Item | Credits |
 |---|---|
-| 1회(16개 쿼리) 전체 실행 | 약 **54.3** |
-| 매일 1회 × 30일 | 약 **1,630 / 월** |
+| One full run (16 queries) | ~**54.3** |
+| Once daily × 30 days | ~**1,630 / month** |
 
-- **Free 플랜(월 2,500 credits, API 포함)으로 충분합니다.** 현재 사용률 약 65%.
-- 가장 비싼 쿼리는 `The Big Players…`(#3360297) 하나로 **~24 credits (일일 비용의 44%)** — 전체 transfer 이력을 스캔하기 때문. 향후 크레딧이 부족해지면 이 쿼리부터 최적화(스캔 범위 제한 등)하면 효과가 큽니다.
-- 온체인 이력이 늘수록 쿼리당 크레딧도 서서히 증가하므로 여유분(월 ~870 credits)은 모니터링 권장. 초과분은 $5/100 credits(= $0.05/credit)로 과금됩니다. 지속적으로 부족하면 다음 등급 **Analyst($65/월, 4,000 credits)** 로 업그레이드하면 됩니다.
-- 참고: 앞서 겪은 429 는 크레딧 소진이 아니라 **요청 rate limit** 입니다. Free 플랜은 rate limit 이 낮으므로 `DUNE_CONCURRENCY` 를 낮게(기본 3) 유지하는 것이 안전합니다.
+- **The Free plan (2,500 credits/month, API included) is enough.** Currently ~65% used.
+- The most expensive query is `The Big Players…` (#3360297) alone at **~24 credits
+  (44% of the daily cost)** because it scans the full transfer history. If credits ever
+  get tight, optimizing this one query first (e.g. limiting its scan range) has the
+  biggest impact.
+- Per-query credits grow slowly as on-chain history grows, so monitor the headroom
+  (~870 credits/month). Overage is billed at $5/100 credits (= $0.05/credit). If you're
+  consistently over, upgrade to the next tier, **Analyst ($65/month, 4,000 credits)**.
+- Note: the 429 we hit earlier was a **request rate limit**, not credit exhaustion. The
+  Free plan has low rate limits, so keeping `DUNE_CONCURRENCY` low (default 3) is safe.
 
-## 대안: Dune 유료 플랜의 native 스케줄러
+## Alternative: Dune's native scheduler (paid plans)
 
-유료 플랜(**Analyst $65/월 이상**, medium/large 엔진 필요)이면 이 스크립트·GitHub Actions 없이
-Dune 자체 **Query Scheduler** 로 Dune 이 알아서 쿼리를 주기 실행하게 할 수 있습니다.
+On a paid plan (**Analyst $65/month or higher**, medium/large engine required) you can
+use Dune's built-in **Query Scheduler** to let Dune run the queries on a schedule —
+without this script or GitHub Actions.
 
-### 등록 방법 (쿼리마다 개별 설정, Dune 웹 UI)
+### How to set it up (per query, in the Dune web UI)
 
-1. 대시보드에서 차트 `···` → **View query** 로 쿼리 편집기를 엽니다.
-2. 편집기 하단의 **시계(⏰) 아이콘** 클릭 (Run 버튼 왼쪽).
-3. 대화창에서 **새로고침 주기**(specific time + frequency)와 **실행 엔진**(medium/large)을 선택합니다.
-4. 표시되는 **예상 월 크레딧 소비량 / 쿼터**를 확인합니다.
-5. **Save** → 쿼리가 즉시 1회 실행되고, 이후 설정한 주기대로 자동 실행됩니다.
-6. 대시보드는 각 쿼리의 최신 실행 결과를 표시하므로, 이렇게 걸어두면 자동으로 최신 상태가 됩니다.
+1. Open the query editor via a chart's `···` → **View query**.
+2. Click the **clock (⏰) icon** at the bottom of the editor (left of the Run button).
+3. In the dialog, pick a **refresh schedule** (specific time + frequency) and an
+   **execution engine** (medium/large).
+4. Review the **estimated monthly credit consumption / quota** shown.
+5. **Save** → the query runs once immediately, then on your schedule.
+6. Since the dashboard shows each query's latest result, this keeps it up to date.
 
-> 이 대시보드는 쿼리가 16개이므로 **각 쿼리마다 위 과정을 반복**해야 합니다.
-> (반면 이 스크립트는 `queries.json` 한 곳에서 전부 관리)
+> This dashboard has 16 queries, so you'd **repeat this for each query**.
+> (Whereas this script manages them all from one `queries.json`.)
 
-### 제약 / 비교
+### Constraints / comparison
 
-- **파라미터가 있는 쿼리는 스케줄 불가**, 주기는 Dune 제공 프리셋 범위.
-- 크레딧 소비량은 API 방식과 **동일**(엔진·스캔량 기준). 차이는 *트리거 주체*뿐:
-  Dune 스케줄러 = Dune 이 트리거(운영 부담 0, 유료) / 이 스크립트 = 외부 cron·Actions 가 트리거(무료, 실행 시각 정밀 제어).
-- **정리**: `$65/월 + 설정 제로` (native 스케줄러) vs `$0 + 약간의 cron/Actions 설정` (이 스크립트).
-  실행 시각을 오전 9시(KST) 이전으로 정밀히 맞추려면 cron 방식이 더 유리합니다.
+- **Parameterized queries can't be scheduled**; frequency is limited to Dune's presets.
+- Credit consumption is **the same** as the API approach (based on engine + scan size).
+  The only difference is *who triggers*: Dune scheduler = Dune triggers (zero ops, paid) /
+  this script = external cron/Actions triggers (free, precise timing control).
+- **Summary**: `$65/month + zero setup` (native scheduler) vs `$0 + a little cron/Actions
+  setup` (this script). For pinning the run to before 09:00 KST, the cron approach gives
+  finer control.
 
-## 참고
+## Notes
 
-- 대시보드→쿼리 목록은 공개 API 로 자동 수집이 불가능하여(내부 API 인증 필요), `queries.json` 으로 직접 관리합니다.
+- The dashboard → query-list mapping can't be collected via a public API (the internal
+  API requires auth), so `queries.json` is maintained by hand.

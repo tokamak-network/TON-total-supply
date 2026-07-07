@@ -31,7 +31,11 @@ const API_KEY = process.env.DUNE_EXECUTE_API_KEY || process.env.DUNE_API_KEY;
 const PERFORMANCE = process.env.DUNE_PERFORMANCE || "medium";
 const WAIT = process.argv.includes("--wait");
 const WAIT_TIMEOUT_MS = Number(process.env.DUNE_WAIT_TIMEOUT_MS) || 10 * 60 * 1000;
-const POLL_INTERVAL_MS = 5000;
+// 적응형 폴링: 빠른 쿼리는 짧은 간격으로 즉시 감지하고, 오래 걸리는 쿼리는 간격을
+// 늘려 상태 조회 요청 수를 줄인다(Free 플랜 rate limit 완화).
+const POLL_START_MS = 2000;
+const POLL_MAX_MS = 15000;
+const POLL_BACKOFF = 1.5;
 // 한 번에 동시에 실행하는 쿼리 수. 너무 크면 Dune rate limit(429)에 걸린다.
 const CONCURRENCY = Number(process.env.DUNE_CONCURRENCY) || 3;
 const MAX_RETRIES = 5; // 429 재시도 횟수
@@ -110,10 +114,12 @@ async function execute(query) {
 
 async function waitForCompletion(executionId) {
   const deadline = Date.now() + WAIT_TIMEOUT_MS;
+  let interval = POLL_START_MS;
   while (Date.now() < deadline) {
     const status = await duneFetch(`${API_BASE}/execution/${executionId}/status`);
     if (TERMINAL_STATES.has(status.state)) return status.state;
-    await sleep(POLL_INTERVAL_MS);
+    await sleep(interval);
+    interval = Math.min(interval * POLL_BACKOFF, POLL_MAX_MS);
   }
   return "TIMEOUT";
 }
