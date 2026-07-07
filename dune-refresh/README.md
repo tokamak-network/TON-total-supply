@@ -41,6 +41,27 @@ Dune 대시보드는 각 쿼리의 **최신 실행 결과**를 표시합니다. 
 - **로컬/서버 cron**: 프로젝트 루트 `.env` 에 이미 있는 키를 그대로 사용
 - **GitHub Actions**: 저장소 **Settings → Secrets and variables → Actions** 에 `DUNE_EXECUTE_API_KEY`(또는 `DUNE_API_KEY`) 등록
 
+### 키 발급 위치
+
+- 팀 워크스페이스: **Dune → workspace → tokamak-network → APIs**
+  (<https://dune.com/workspace/t/tokamak-network/apis>)
+- 개인 계정: **Settings → API** (<https://dune.com/settings/api>)
+- **Create API key** → 이름 지정 → 생성 직후 **한 번만** 전체 값이 표시되므로 그때 복사. (Free 플랜도 API 키 발급 가능)
+
+### 한도 소진 시 다른 계정 키로 교체
+
+크레딧은 **키를 발급한 계정** 기준으로 차감됩니다. 한 계정의 월 한도가 차면
+**다른 계정에서 발급한 키로 값만 바꾸면** 코드 수정 없이 그 계정의 크레딧으로 계속 실행됩니다.
+
+교체 대상은 **실제 실행하는 환경 한 곳만** 바꾸면 됩니다:
+
+| 실행 방식 | 바꿀 곳 |
+|---|---|
+| GitHub Actions | 저장소 **Settings → Secrets and variables → Actions** 에서 `DUNE_EXECUTE_API_KEY`(및 `DUNE_API_KEY`) **Update** (또는 CLI: `printf '%s' "새키" \| gh secret set DUNE_EXECUTE_API_KEY`) |
+| 로컬/서버 cron | 프로젝트 루트 `.env` 의 `DUNE_EXECUTE_API_KEY` 값 교체 |
+
+> 코드/`queries.json` 은 건드릴 필요 없습니다. 키 값만 교체하면 됩니다.
+
 ## 3-A. GitHub Actions 로 실행 (추천)
 
 `../.github/workflows/dune-refresh.yml` 이 매일 **22:50 UTC (= 다음날 07:50 KST)** 에 자동 실행합니다.
