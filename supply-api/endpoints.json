@@ -1,0 +1,33 @@
+{
+  "$schema_note": "Each endpoint becomes a static JSON file at public/api/v1/supply/<path>.json, served by GitHub Pages. `queryId` is the Dune query that produces the number; it must also be listed in dune-refresh/queries.json so it gets refreshed daily (build.js enforces this). `column` is the column to read from that query's result row. `invariants` declares the relationships that must hold between the fetched values — build.js fails the build, and so skips the deploy, if any is violated.",
+  "endpoints": [
+    {
+      "path": "circulating",
+      "queryId": 3298417,
+      "column": "Circulating_Supply",
+      "description": "Circulating supply = total supply - staked TON - locked TON. This is the figure CoinGecko reads."
+    },
+    {
+      "path": "total",
+      "queryId": 3221097,
+      "column": "TON_Total_Supply",
+      "description": "Total supply = 50,000,000 TON + block seigniorage - burned TON - unminted (reduced) seigniorage."
+    },
+    {
+      "path": "circulating-upbit",
+      "queryId": 3292797,
+      "column": "Circulating_Supply",
+      "description": "Upbit's convention: staked TON is counted as circulating, so only locked TON is excluded."
+    }
+  ],
+  "invariants": [
+    {
+      "lte": ["circulating", "circulating-upbit"],
+      "because": "staked TON is excluded from `circulating` but counted as circulating by Upbit"
+    },
+    {
+      "lte": ["circulating-upbit", "total"],
+      "because": "locked TON is excluded from every circulating figure"
+    }
+  ]
+}
