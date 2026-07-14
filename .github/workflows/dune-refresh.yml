@@ -1,23 +1,37 @@
-name: Dune daily refresh
+name: Dune daily refresh & supply API publish
 
-# Tokamak tokenomics 대시보드의 Dune 쿼리들을 매일 재실행하여 최신 상태로 유지한다.
-# 실행할 쿼리 목록은 dune-refresh/queries.json 에서 관리한다.
+# 1) Tokamak tokenomics 대시보드의 Dune 쿼리들을 매일 재실행하여 최신 상태로 유지한다.
+#    실행할 쿼리 목록은 dune-refresh/queries.json 에서 관리한다.
+# 2) 갱신된 결과를 읽어 정적 supply API(public/)를 만들고 GitHub Pages 로 배포한다.
+#    CoinGecko 등 외부 집계처가 이 정적 JSON 을 직접 폴링한다.
+#    엔드포인트 목록은 supply-api/endpoints.json 에서 관리한다.
 
 on:
   schedule:
     # 매일 22:50 UTC (= 다음날 07:50 KST). CoinGecko/Upbit 등 외부 집계처가 오전 9시(KST)
-    # 경 대시보드를 참조하기 전에 데이터가 갱신돼 있도록 9시 이전으로 당겨 실행한다.
+    # 경 데이터를 참조하기 전에 갱신돼 있도록 9시 이전으로 당겨 실행한다.
     # 분(minute)을 0 이 아닌 값으로 두는 것이 GitHub 권장사항(정각엔 실행이 몰려 지연될 수 있음).
     - cron: "50 22 * * *"
-  workflow_dispatch: {} # Actions 탭에서 수동 실행도 가능
+  workflow_dispatch:
+    inputs:
+      skip_refresh:
+        description: "Dune 재실행 없이 supply API 만 다시 배포 (Dune 크레딧 소모 없음)"
+        type: boolean
+        default: false
 
 # 중복 실행 방지
 concurrency:
   group: dune-refresh
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   refresh:
+    # 사이트만 다시 배포하고 싶을 때(예: 랜딩 페이지 수정, 배포 복구) 16개 쿼리를 다시
+    # 태우지 않도록 건너뛸 수 있게 한다. 재실행은 대시보드 크레딧의 대부분을 쓴다.
+    if: ${{ !inputs.skip_refresh }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -33,3 +47,41 @@ jobs:
           DUNE_EXECUTE_API_KEY: ${{ secrets.DUNE_EXECUTE_API_KEY }}
           DUNE_API_KEY: ${{ secrets.DUNE_API_KEY }}
         run: node dune-refresh/refresh.js --wait
+
+  publish:
+    needs: refresh
+    # refresh 가 실패하거나(일부 쿼리 실패) 건너뛰어져도 발행한다. Dune 결과 조회는 항상
+    # "마지막 성공 실행" 을 돌려주므로, 대시보드용 쿼리 하나가 실패했다고 supply API 갱신까지
+    # 막을 이유가 없다. supply 값 자체가 낡거나 잘못된 경우엔 build.js 가 검증에 실패해
+    # 배포를 건너뛰고, 직전에 배포된 JSON 이 그대로 살아있게 된다.
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    # Pages 배포에 필요한 권한. refresh job 은 Dune 호출만 하므로 부여하지 않는다.
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Build static supply API
+        env:
+          DUNE_EXECUTE_API_KEY: ${{ secrets.DUNE_EXECUTE_API_KEY }}
+          DUNE_API_KEY: ${{ secrets.DUNE_API_KEY }}
+        run: node supply-api/build.js
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - id: deploy
+        uses: actions/deploy-pages@v4

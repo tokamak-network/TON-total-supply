@@ -23,6 +23,19 @@ The [`dune-refresh/`](./dune-refresh) folder holds a small tool that re-runs the
 
 See [`dune-refresh/README.md`](./dune-refresh/README.md) for setup, the query list, API-key handling, and cost details.
 
+## Public supply API (`supply-api/`)
+
+The [`supply-api/`](./supply-api) folder publishes TON's circulating and total supply as a **public, no-auth REST endpoint** that CoinGecko and other aggregators poll:
+
+```console
+$ curl https://tokamak-network.github.io/TON-total-supply/api/v1/supply/circulating.json
+{"result":"64053126.526931055"}
+```
+
+It reads the numbers from the same daily-refreshed Dune queries and publishes them as static JSON on GitHub Pages — there is no server or database to operate. This replaces the supply endpoints of the retiring `price-api` service.
+
+See [`supply-api/README.md`](./supply-api/README.md) for the endpoint list, how it meets CoinGecko's requirements, and setup.
+
 ## Usage
 
 To use this project, follow these steps:
