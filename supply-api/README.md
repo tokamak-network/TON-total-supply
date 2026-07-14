@@ -193,8 +193,8 @@ still depends on the old host.**
 > overwrote them two lines later. The figures served here are the Dune-derived ones
 > behind the public tokenomics dashboard.
 
-> ⚠️ Independently of the shutdown: `price-api`'s git history contains a live Infura
-> project ID and DocumentDB credentials. Rotate them.
+> ⚠️ Decommissioning is not complete until the retired service's credentials are
+> rotated and revoked — not just its hosts switched off.
 
 ## Setup
 
