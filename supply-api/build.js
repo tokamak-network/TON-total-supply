@@ -54,7 +54,13 @@ function loadConfig() {
 
   const seen = new Set();
   for (const e of endpoints) {
-    if (!e || typeof e.path !== "string" || typeof e.queryId !== "number" || !e.column) {
+    if (
+      !e ||
+      typeof e.path !== "string" ||
+      typeof e.queryId !== "number" ||
+      typeof e.column !== "string" ||
+      typeof e.description !== "string"
+    ) {
       throw new Error(`Invalid endpoint entry: ${JSON.stringify(e)}`);
     }
     // The path becomes a filename; keep it a safe slug so an endpoints.json edit
@@ -75,6 +81,25 @@ function loadConfig() {
     }
   }
 
+  // A malformed invariant must not silently pass as a no-op — that is exactly how
+  // the safety net disappears without anyone noticing.
+  if (!Array.isArray(invariants)) {
+    throw new Error(`"invariants" must be an array in ${file}`);
+  }
+  for (const inv of invariants) {
+    const ok =
+      inv &&
+      Array.isArray(inv.lte) &&
+      inv.lte.length === 2 &&
+      inv.lte.every((p) => typeof p === "string") &&
+      typeof inv.because === "string";
+    if (!ok) {
+      throw new Error(
+        `Invalid invariant entry (need { lte: [string, string], because: string }): ${JSON.stringify(inv)}`
+      );
+    }
+  }
+
   return { endpoints, invariants };
 }
 
@@ -86,25 +111,40 @@ function toDecimalString(raw, label) {
   throw new Error(`${label}: expected a finite number, got ${JSON.stringify(raw)}`);
 }
 
-async function fetchValue(endpoint) {
-  const label = `#${endpoint.queryId} ${endpoint.path}`;
-  // limit=1: these queries each return a single summary row, and result reads
-  // are billed per datapoint.
-  const body = await duneFetch(`${API_BASE}/query/${endpoint.queryId}/results?limit=1`);
-
+// limit=1: these queries each return a single summary row, and result reads are
+// billed per datapoint.
+async function fetchResult(queryId) {
+  const body = await duneFetch(`${API_BASE}/query/${queryId}/results?limit=1`);
   const row = body.result && body.result.rows && body.result.rows[0];
-  if (!row) throw new Error(`${label}: query returned no rows`);
+  // Guard the shape rather than trusting it: `column in row` throws a TypeError on
+  // a primitive, which would obscure the real problem (Dune returned junk).
+  if (!row || typeof row !== "object" || Array.isArray(row)) {
+    throw new Error(`#${queryId}: expected a result row object, got ${JSON.stringify(row)}`);
+  }
+  return { row, executedAt: body.execution_ended_at || null };
+}
+
+function readEndpoint(endpoint, { row, executedAt }) {
+  const label = `#${endpoint.queryId} ${endpoint.path}`;
   if (!(endpoint.column in row)) {
     throw new Error(
       `${label}: column "${endpoint.column}" not in result (columns: ${Object.keys(row).join(", ")})`
     );
   }
-
   return {
     ...endpoint,
     value: toDecimalString(row[endpoint.column], label),
-    executedAt: body.execution_ended_at || null,
+    executedAt,
   };
+}
+
+// Fetch each distinct query once, even if several endpoints read different columns
+// out of the same result row — a result read is billed per call.
+async function fetchAll(endpoints) {
+  const queryIds = [...new Set(endpoints.map((e) => e.queryId))];
+  const fetched = await mapLimit(queryIds, CONCURRENCY, fetchResult);
+  const byQueryId = new Map(queryIds.map((id, i) => [id, fetched[i]]));
+  return endpoints.map((e) => readEndpoint(e, byQueryId.get(e.queryId)));
 }
 
 // CoinGecko publishes whatever we return, so a figure that silently goes wrong is
@@ -119,7 +159,11 @@ function validate(results, invariants) {
     if (!r.executedAt) {
       throw new Error(`${r.path}: Dune result has no execution timestamp`);
     }
-    const ageMs = Date.now() - Date.parse(r.executedAt);
+    const executedAtMs = Date.parse(r.executedAt);
+    if (Number.isNaN(executedAtMs)) {
+      throw new Error(`${r.path}: unparseable execution timestamp "${r.executedAt}"`);
+    }
+    const ageMs = Date.now() - executedAtMs;
     if (!(ageMs < MAX_RESULT_AGE_MS)) {
       const hours = Math.round(ageMs / 3600_000);
       throw new Error(
@@ -255,9 +299,10 @@ async function main() {
   requireApiKey();
 
   const { endpoints, invariants } = loadConfig();
-  console.log(`▶ Fetching ${endpoints.length} Dune results`);
+  const queryCount = new Set(endpoints.map((e) => e.queryId)).size;
+  console.log(`▶ Fetching ${queryCount} Dune results for ${endpoints.length} endpoints`);
 
-  const results = await mapLimit(endpoints, CONCURRENCY, fetchValue);
+  const results = await fetchAll(endpoints);
   for (const r of results) {
     console.log(`✅ ${r.path.padEnd(18)} ${r.value}  (executed ${r.executedAt})`);
   }
