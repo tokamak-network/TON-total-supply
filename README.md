@@ -32,7 +32,7 @@ $ curl https://tokamak-network.github.io/TON-total-supply/api/v1/supply/circulat
 {"result":"64053126.526931055"}
 ```
 
-It reads the numbers from the same daily-refreshed Dune queries and publishes them as static JSON on GitHub Pages — there is no server or database to operate. This replaces the supply endpoints of the retiring `price-api` service.
+It reads the numbers from the same daily-refreshed Dune queries and publishes them as static JSON on GitHub Pages — there is no server or database to operate.
 
 See [`supply-api/README.md`](./supply-api/README.md) for the endpoint list, how it meets CoinGecko's requirements, and setup.
 
