@@ -8,11 +8,9 @@ $ curl https://tokamak-network.github.io/TON-total-supply/api/v1/supply/circulat
 {"result":"64053126.526931055"}
 ```
 
-It replaces the supply endpoints of `price-api` (AWS ECS + DocumentDB), which is
-being decommissioned. There is **no server and no database here.** A GitHub Actions
-job reads the numbers from Dune once a day, writes them as static JSON, and GitHub
-Pages serves them — so there is no host that can go down and take TON's supply data
-off CoinGecko with it.
+There is **no server and no database here.** A GitHub Actions job reads the numbers
+from Dune once a day, writes them as static JSON, and GitHub Pages serves them — so
+there is no host that can go down and take TON's supply data off CoinGecko with it.
 
 ## Endpoints
 
@@ -173,28 +171,15 @@ fix, or recovering a bad deploy): **Actions → _Dune daily refresh & supply API
 → Run workflow → check `skip_refresh`**. A full refresh consumes most of the monthly
 credit budget, so don't trigger one just to redeploy.
 
-## Migrating CoinGecko off `price-api`
+## Registering with CoinGecko
 
-Until CoinGecko is confirmed to be reading the endpoints above, **its supply data
-still depends on the old host.**
+Submit the URLs via CoinGecko's
+[supply disclosure form](https://support.coingecko.com/hc/en-us/articles/4499342867609):
 
-1. **Find the URL CoinGecko currently polls.** It is recorded nowhere in either repo —
-   `price-api`'s HANDOVER.md only ever writes `https://<API_ENDPOINT>`. Check the
-   CoinGecko support ticket or the token's listing dashboard.
-2. **Submit the new URLs** via CoinGecko's
-   [supply disclosure form](https://support.coingecko.com/hc/en-us/articles/4499342867609):
-   - circulating → `https://tokamak-network.github.io/TON-total-supply/api/v1/supply/circulating.json`
-   - total → `https://tokamak-network.github.io/TON-total-supply/api/v1/supply/total.json`
-3. **Confirm CoinGecko has switched**, then decommission `price-api`. Retiring it
-   first leaves TON's supply frozen on CoinGecko at whatever the last poll returned.
+- circulating → `https://tokamak-network.github.io/TON-total-supply/api/v1/supply/circulating.json`
+- total → `https://tokamak-network.github.io/TON-total-supply/api/v1/supply/total.json`
 
-> Don't treat the old service's supply math as the reference. Its collector carried
-> hardcoded vesting constants and a dead branch that computed `C2`/`C3`/`C4` and then
-> overwrote them two lines later. The figures served here are the Dune-derived ones
-> behind the public tokenomics dashboard.
-
-> ⚠️ Decommissioning is not complete until the retired service's credentials are
-> rotated and revoked — not just its hosts switched off.
+CoinGecko's published figures should then track these values.
 
 ## Setup
 
