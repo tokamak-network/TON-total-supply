@@ -85,3 +85,33 @@ jobs:
 
       - id: deploy
         uses: actions/deploy-pages@v4
+
+  # refresh 나 publish 중 하나라도 실패하면 kevin@tokamak.network 로 메일 알림을 보낸다.
+  # GitHub 기본 실패 메일은 워크플로우 파일을 마지막으로 수정한 사람에게만 가므로,
+  # 담당자에게 확실히 도달하도록 별도 알림 job 을 둔다.
+  # 필요한 Secret (Settings → Secrets and variables → Actions):
+  #   MAIL_USERNAME — 보내는 Gmail/Workspace 계정 주소
+  #   MAIL_PASSWORD — 그 계정의 앱 비밀번호(app password, 일반 로그인 비밀번호 아님)
+  notify:
+    needs: [refresh, publish]
+    if: ${{ failure() }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Email on failure
+        uses: dawidd6/action-send-mail@v4
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          from: Dune Refresh Bot <${{ secrets.MAIL_USERNAME }}>
+          to: kevin@tokamak.network
+          subject: "❌ Dune daily refresh failed (run #${{ github.run_number }})"
+          body: |
+            The scheduled "Dune daily refresh & supply API publish" workflow failed.
+
+            Repository: ${{ github.repository }}
+            Run:        ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            Check the run logs above for which Dune queries timed out or errored.
